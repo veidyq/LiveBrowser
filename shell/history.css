@@ -1,0 +1,508 @@
+/* ======================================================================
+   LiveBrowser — "недавнее": the desktop history strip and the recently
+   closed tabs postcard popover (history.js).
+   ----------------------------------------------------------------------
+   Loaded AFTER app.css / palette.css / settings.css.  Everything here is
+   namespaced (recent-*, rc-*, rp-*) and only reads app.css tokens, so the
+   other modules are never restyled.  Layer budget: bar 30, popover 45 (below
+   the suggest panel 15? no — above the bar, below every modal), settings 70,
+   pages 75, toasts 80, palette 85.
+   ====================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* Tokens scoped to both surfaces                                      */
+/* ------------------------------------------------------------------ */
+
+.recent-bar,
+.recent-pop {
+  --rc-card-w: 150px;
+  --rc-card-h: 92px;
+  --rc-rad: var(--radius-lg);       /* 12 */
+  --rc-glass: var(--tile-bg);       /* same surface as .link-tile */
+  --rc-glass-hover: var(--tile-bg-hover);
+  --rc-hair: var(--glass-border);
+  --rc-gap: 10px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 1. Desktop strip: .recent-bar under .links                          */
+/* ------------------------------------------------------------------ */
+
+.recent-bar {
+  width: min(760px, 90vw);
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rc-head,
+.rc-foot {
+  /* The strip is wider than a single card, and .rc-row is a flex row that
+     stops growing at its last card — so stretching header/footer over the
+     760px shell left «НЕДАВНЕЕ» floating ~215px right of a lone card, and
+     the footer «1 запись» sat under it.  Both now shrink to their content
+     and centre on the .recent-bar axis, matching the .links tiles above. */
+  align-self: center;
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
+}
+
+.rc-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-dim);
+  /* Заголовок не в PRESSABLE-списке feel.js, поэтому нажим тут свой:
+     мягкий scale-сквош .16s на независимом свойстве scale. */
+  transition: color 0.15s ease, background 0.15s ease,
+              scale 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rc-head:hover { color: var(--text); background: var(--hover); }
+.rc-head:active { scale: 0.985; }
+.rc-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rc-toggle {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  /* .rc-toggle ловит .is-pressed от feel.js (мгновенное сжатие), и этот
+     список перебивает пружину возврата app.css — поэтому transform/scale
+     .32s обязаны остаться в списке, иначе отпускание щёлкает рывком. */
+  transition: background 0.12s ease,
+              transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+              scale 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rc-toggle:hover { background: var(--hover-strong); }
+.rc-toggle svg {
+  width: 15px; height: 15px;
+  fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  /* The arrow points down when collapsed, up when expanded. */
+  transform: rotate(0deg);
+  transition: transform 0.2s var(--ease-spring);
+}
+body.recent-open .rc-toggle svg { transform: rotate(180deg); }
+
+/* Collapsible body: the row scales in vertically (transform only — a
+   grid-template-rows transition re-lays-out the whole strip on every frame,
+   which is visible as a hitch on the first open).  The row keeps its natural
+   height, so scaleY is exact: 0 → 1 with the top edge pinned. */
+.rc-body {
+  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  transition: transform 0.24s var(--ease-spring), opacity 0.18s ease;
+  margin-top: 0;
+}
+body.recent-open .rc-body {
+  transform: none;
+  opacity: 1;
+  margin-top: 10px;
+}
+.rc-body > * { min-height: 0; overflow: hidden; }
+
+.rc-row {
+  display: flex;
+  gap: var(--rc-gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 6px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  /* «Симметрично»: при неполном ряде карточки центрируются, при переполнении
+     «safe» откатывает к flex-start — скролл не ломается, центр не рвёт
+     первую карточку. */
+  justify-content: safe center;
+}
+.rc-row::-webkit-scrollbar { display: none; }
+
+/* Edge masks: appear only when the row actually has hidden cards. */
+body.recent-open .recent-bar.rc-more .rc-row {
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent);
+          mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent);
+}
+body.recent-open .recent-bar.rc-more.rc-scrolled .rc-row {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 44px), transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 44px), transparent);
+}
+
+/* ---- A history card ---- */
+.rc-card {
+  /* Five 150px cards + gaps + 4px padding overflowed the 760px strip by
+     34px, so the last card was clipped at the right edge and «НЕДАВНЕЕ»
+     slid off-centre.  Shrinking keeps the row (and its header) inside the
+     strip; the edge mask and scroll-snap still say "there is more". */
+  flex: 0 1 var(--rc-card-w);
+  width: var(--rc-card-w);
+  height: var(--rc-card-h);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* Top block, then the title fills the middle, the time sits at the bottom. */
+  justify-content: flex-start;
+  text-align: left;
+  padding: 9px 10px;
+  border: 1px solid var(--rc-hair);
+  border-radius: var(--rc-rad);
+  background: var(--rc-glass);
+  color: var(--text);
+  cursor: pointer;
+  scroll-snap-align: start;
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  transition: background 0.15s ease, transform 0.2s var(--ease-spring),
+              border-color 0.15s ease;
+  /* Accent comes from the domain hash (accFor) — one hue per site. */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  position: relative;
+}
+/* Внешняя тень запечена в ::after и проявляется на hover прозрачностью:
+   hover-подъём (-2px) работает «в воздухе» с глубиной, композитор только
+  opacity.  Кибер-кожа рисует свою — слой там не рисуется. */
+html:not([data-theme="cyberpunk"]) .rc-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 3px 10px rgba(0,0,0,.22), 0 10px 26px rgba(0,0,0,.24);
+  opacity: 0;
+  transition: opacity .18s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+html:not([data-theme="cyberpunk"]) .rc-card:hover::after { opacity: 1; }
+.rc-card:hover {
+  background: var(--rc-glass-hover);
+  border-color: color-mix(in srgb, var(--rc-accent, var(--accent)) 55%, var(--rc-hair));
+  transform: translateY(-2px);
+}
+.rc-card:active { transform: scale(0.97); }
+
+.rc-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.rc-dot {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--rc-accent, var(--accent));
+}
+.rc-dom {
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rc-accent, var(--accent-soft));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rc-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.32;
+  color: var(--text);
+  /* Two lines regardless of content: the card grid stays even. */
+  flex: 1 1 auto;
+  max-height: calc(2 * 1.32em);
+}
+
+.rc-time {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Footer: "N записей · Очистить" ---- */
+.rc-foot {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 6px;
+}
+body.recent-open .rc-foot { display: flex; }
+.rc-count { color: var(--text-faint); font-size: 11px; }
+body.recent-empty .rc-count { color: var(--text-faint); }
+.rc-dot-sep { color: var(--text-faint); font-size: 11px; }
+body.recent-empty .rc-dot-sep,
+body.recent-empty .rc-clear { display: none; }
+
+.rc-clear {
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  /* Как у .rc-toggle: feel.js жмёт .is-pressed — каналы transform/scale
+     .32s держим, чтобы пружина возврата app.css не перебивалась. */
+  transition: color 0.12s ease, background 0.12s ease,
+              transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+              scale 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rc-clear:hover { color: var(--danger-text); background: var(--danger-soft); }
+.rc-clear:active { scale: 0.985; }
+.rc-clear:disabled { opacity: 0.5; cursor: default; }
+
+/* ---- Card entrance: opacity + translateY(8px), 180 ms ---- */
+@keyframes rc-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.rc-card.rc-in {
+  animation: rc-in 0.18s var(--ease-spring) both;
+  animation-delay: var(--rc-delay, 0ms);
+}
+
+/* ---- Пустое состояние: мягкий поздний fade-in (history.js вешает класс
+   только на «свежий» показ пустого узла — поповер и статус стрипа). ---- */
+@keyframes lb-empty-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+.lb-empty-in {
+  animation: lb-empty-in .25s ease .08s both;
+}
+
+/* The strip exists only on the desktop (tabs.js sets body.on-home). */
+body:not(.on-home) .recent-bar { display: none; }
+
+/* ------------------------------------------------------------------ */
+/* 2. Recently closed postcards: #recent-btn + #recent-pop              */
+/* ------------------------------------------------------------------ */
+
+/* The button carries the geometry of #tab-new; the badge is the only extra. */
+.recent-btn { position: relative; }
+.recent-count {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  /* Контактная тень + ring по кромке карточки (образец .tab-badge): бейдж
+     не «клеится» поверх стекла, а сидит на нём. */
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35), 0 0 0 2px var(--rc-glass, var(--panel, #1b1b24));
+}
+.recent-btn.has-closed { color: var(--accent-soft); }
+
+.recent-pop {
+  position: fixed;
+  z-index: 45;               /* above the bar (30), below every modal */
+  width: 300px;
+  max-height: min(360px, calc(100vh - var(--bar-h) - 32px));
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--panel-strong) 84%, transparent);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  box-shadow: var(--shadow-2), var(--glass-spec);
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  transform-origin: top right;
+  transition: opacity 0.16s ease, transform 0.2s var(--ease-spring);
+  overflow: hidden;
+}
+.recent-pop.open { opacity: 1; transform: none; }
+.recent-pop[hidden] { display: none; }
+/* On a site tab the ui view is clipped to the bar: the popover would fall
+   into the native site view and look cut.  It only lives on the desktop. */
+body.site-active .recent-pop { display: none; }
+
+.rp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 8px 8px 10px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 4px;
+}
+.rp-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.rp-restore {
+  border: 0;
+  background: transparent;
+  color: var(--accent-soft);
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease,
+              scale 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rp-restore:hover { background: var(--hover); color: var(--accent); }
+.rp-restore:active { scale: 0.985; }
+.rp-restore:disabled { opacity: 0.4; cursor: default; background: transparent; }
+
+.rp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  min-height: 0;
+}
+
+.rp-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease,
+              scale 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rp-row:hover { background: var(--hover); }
+.rp-row:active { background: var(--hover-strong); scale: 0.985; }
+
+.rp-dot {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fff;
+}
+.rp-body { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.rp-name {
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rp-sub {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rp-empty {
+  padding: 14px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-faint);
+  text-align: center;
+}
+.recent-pop.has-items .rp-empty { display: none; }
+
+.rp-foot {
+  padding: 8px 10px 4px;
+  margin-top: 4px;
+  border-top: 1px solid var(--hairline);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+/* Keyboard focus for both surfaces (same ring as the rest of the shell). */
+.rc-card:focus-visible,
+.rc-toggle:focus-visible,
+.rc-clear:focus-visible,
+.rp-row:focus-visible,
+.rp-restore:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Motion guards                                                    */
+/* ------------------------------------------------------------------ */
+
+body.no-anim .rc-body,
+body.no-anim .rc-toggle svg,
+body.no-anim .rc-card,
+body.no-anim .recent-pop,
+body.no-anim .rc-head,
+body.no-anim .rc-toggle,
+body.no-anim .rc-clear,
+body.no-anim .rp-row,
+body.no-anim .rp-restore { transition: none; }
+body.no-anim .lb-empty-in { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-body, .rc-toggle svg, .rc-card, .recent-pop,
+  .rc-head, .rc-toggle, .rc-clear, .rp-row, .rp-restore { transition: none; }
+  .rc-card.rc-in,
+  .lb-empty-in { animation: none; }
+  .rc-card:hover { transform: none; }
+  /* Сквош нажатия тоже статичен: движение ради движения отключено. */
+  .rc-head:active, .rc-toggle:active, .rc-clear:active,
+  .rp-row:active, .rp-restore:active { scale: none; }
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Cyberpunk skin: flat edges, no blur — like the other surfaces      */
+/* ------------------------------------------------------------------ */
+
+html[data-theme="cyberpunk"] .rc-card { border-radius: 2px; }
+html[data-theme="cyberpunk"] .rc-dot,
+html[data-theme="cyberpunk"] .rp-dot { border-radius: 2px; }
+html[data-theme="cyberpunk"] .rc-card:hover { transform: none; }
+html[data-theme="cyberpunk"] .recent-pop { border-radius: 2px; }
+html[data-theme="cyberpunk"] .recent-count {
+  border-radius: 2px;
+  background: var(--accent-yellow, var(--accent));
+  color: #0a0a0a;
+}

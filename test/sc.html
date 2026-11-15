@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LiveBrowser scroll probe</title>
+<style>
+  html, body { margin: 0; }
+  body { background: #0d0d10; color: #e8e8ea; font: 15px/1.6 system-ui, sans-serif; }
+  .block { height: 900px; display: grid; place-items: center; border-bottom: 1px solid #23232a; }
+  .block:nth-child(2n) { background: #121218; }
+  h1 { font-size: 40px; margin: 0; letter-spacing: -0.02em; }
+  /* A second scroller: the probe must follow whichever node owns the wheel. */
+  #inner { margin: 40px auto; width: min(680px, 80vw); height: 420px; overflow: auto;
+           border: 1px solid #2a2a33; border-radius: 12px; }
+  #inner div { height: 300px; display: grid; place-items: center; border-bottom: 1px solid #23232a; }
+</style>
+</head>
+<body>
+  <div class="block"><h1>0</h1></div>
+  <div class="block"><h1>1</h1></div>
+  <div class="block">
+    <div id="inner">
+      <div>inner 0</div><div>inner 1</div><div>inner 2</div><div>inner 3</div><div>inner 4</div>
+    </div>
+  </div>
+  <div class="block"><h1>2</h1></div>
+  <div class="block"><h1>3</h1></div>
+  <div class="block"><h1>4</h1></div>
+  <div class="block"><h1>5</h1></div>
+  <div class="block"><h1>6</h1></div>
+  <div class="block"><h1>7</h1></div>
+</body>
+</html>

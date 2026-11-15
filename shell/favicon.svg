@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Favicon: the app mark, flattened for 16 px. No glow, no blur filter. -->
+  <defs>
+    <radialGradient id="d" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#8A94F0"/>
+      <stop offset="1" stop-color="#404AB4"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="124" fill="url(#d)"/>
+  <path d="M 174.1 86.5 A 62 62 0 1 0 151.2 181.4"
+        fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="206" cy="96" r="15" fill="#2ED3C0"/>
+  <circle cx="128" cy="128" r="25" fill="#FFFFFF"/>
+</svg>

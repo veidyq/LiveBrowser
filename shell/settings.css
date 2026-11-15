@@ -1,0 +1,632 @@
+/* ======================================================================
+   LiveBrowser — Settings & Downloads pages: design polish
+   ----------------------------------------------------------------------
+   Loaded AFTER app.css (index.html).  app.css is NOT modified: every rule
+   here re-declares an app.css selector with a `.page` / `#downloads-page`
+   prefix so it wins the cascade by specificity, never by !important.
+   DESIGN_AUDIT.md lists the duplicated selectors — the orchestrator can
+   drop the app.css copies in a later cleanup pass.
+
+   Design language: Raycast + Apple + Linear — dark #08090B, glass
+   rgba(255,255,255,0.055) with blur 36-40px saturate(180%) + specular
+   rim, text #E8E9EC / #9EA1A8 / #5F6268, accent-driven, radii 14/8/999,
+   Inter, 4px spacing grid.
+
+   Surfaces: both dialogs share the `.page` class (settings-page,
+   downloads-page), so one scoped block styles both.
+   ====================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* 0. Scoped tokens                                                    */
+/* ------------------------------------------------------------------ */
+
+.page {
+  /* Unified control style (spec): field rgba(255,255,255,0.04) on
+     border rgba(255,255,255,0.08); hairlines 1px rgba(255,255,255,0.06).
+     Light-theme equivalents keep the same geometry on bright glass. */
+  --stg-field: rgba(255, 255, 255, 0.04);
+  --stg-field-hover: rgba(255, 255, 255, 0.08);
+  --stg-field-border: rgba(255, 255, 255, 0.08);
+  --stg-divider: rgba(255, 255, 255, 0.06);
+
+  /* WCAG AA fix, scoped to these pages: token --text-faint (#5f6268) is
+     3.26:1 on #08090B and 3.09:1 on the #101114 card — below 4.5:1 for
+     the 11-12px labels/paths that use it.  #7a7e86 = 4.89:1 / 4.64:1. */
+  --text-faint: #7a7e86;
+}
+
+[data-theme="light"] .page {
+  --stg-field: rgba(10, 12, 16, 0.05);
+  --stg-field-hover: rgba(10, 12, 16, 0.08);
+  --stg-field-border: rgba(10, 12, 16, 0.14);
+  --stg-divider: rgba(10, 12, 16, 0.08);
+
+  /* Light token #9ea1a8 is 2.39:1 on #F5F6F8 — hard AA fail.
+     #6a6e76 = 4.73:1. */
+  --text-faint: #6a6e76;
+}
+
+/* ------------------------------------------------------------------ */
+/* 1. Page shell: scrim card, head, scroll, foot                        */
+/* ------------------------------------------------------------------ */
+
+/* Liquid-glass modal card: translucent panel + specular rim instead of
+   the flat opaque slab (spec: blur 36px sat 180% + inset rim light).
+
+   Непрозрачная основа под стеклом.  Раньше карточка была только
+   полупрозрачной заливкой (86 %) поверх backdrop-filter: при открытых
+   Настройках blur снимал под собой композиторные слои рабочего стола, и
+   вместо матового стекла просвечивал его фон — тёплый, как обои.  Здесь
+   тот же цвет, но сплошной: 0.86 панели поверх себя же даёт ровно
+   #101114 в тёмной теме, а стекло остаётся видимым только по кромке
+   (spec-rim) — там, где ему и место.  Скин может переопределить --stg-card,
+   если ему нужна прозрачность. */
+.page .page-card {
+  background: var(--stg-card, var(--panel-strong));
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(36px) saturate(180%);
+  -webkit-backdrop-filter: blur(36px) saturate(180%);
+  box-shadow: var(--shadow-2), var(--glass-spec);
+}
+
+.page .page-head {
+  margin-bottom: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--stg-divider);
+}
+
+/* White rim is invisible on the white glass card — use a dark hairline. */
+[data-theme="light"] .page .page-card { border-color: var(--border-strong); }
+
+.page .page-title {
+  font-size: 16px;      /* was 18px — Linear-scale dialog title */
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.page .page-sub { margin-top: 4px; }
+
+/* Close button (scoped so the translate bubble keeps its own style). */
+.page .bubble-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  font-size: 20px;
+  color: var(--text-dim);
+  transition: background 0.15s ease, color 0.15s ease,
+              transform 0.15s var(--ease-spring);
+}
+.page .bubble-close:hover { background: var(--stg-field-hover); color: var(--text); }
+.page .bubble-close:active { transform: scale(0.94); }
+
+.page .page-scroll { gap: 20px; }
+
+.page .page-foot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--stg-divider);
+}
+
+.page .page-version { font-size: 11px; }  /* color comes from lifted --text-faint */
+
+/* ------------------------------------------------------------------ */
+/* 2. Sections: eyebrow labels + 1px hairline dividers (Raycast style)  */
+/* ------------------------------------------------------------------ */
+
+/* Flat labelled groups separated by hairlines instead of boxed cards. */
+.page .page-section {
+  padding: 0 0 20px;
+  border: 0;
+  border-bottom: 1px solid var(--stg-divider);
+  border-radius: 0;
+  background: transparent;
+}
+.page .page-section:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.page .settings-label {
+  margin-bottom: 12px;
+  font-size: 12px;      /* spec 12-13px */
+  font-weight: 600;
+  /* Uppercase eyebrows need positive tracking; the -0.01em of the spec
+     stays on titles (.page-title). */
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Fields: selects / inputs — one style, accent focus ring           */
+/* ------------------------------------------------------------------ */
+
+.page .page-select,
+.page .page-input {
+  min-height: 36px;
+  padding: 8px 12px;
+  background-color: var(--stg-field);
+  border: 1px solid var(--stg-field-border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 13px;
+  transition: border-color 0.15s ease, background-color 0.15s ease,
+              box-shadow 0.15s ease;
+}
+.page .page-select:hover,
+.page .page-input:hover {
+  background-color: var(--stg-field-hover);
+  border-color: var(--border-strong);
+}
+.page .page-input:focus,
+.page .page-input:focus-visible,
+.page .page-select:focus,
+.page .page-select:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.page .page-select:disabled,
+.page .page-input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.page .page-input::placeholder { color: var(--text-faint); }
+
+/* Custom chevron — the native arrow fights the dark theme. */
+.page .page-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ea1a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px 14px;
+  padding-right: 32px;
+}
+[data-theme="light"] .page .page-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2362656c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.page .field-label { font-size: 12px; color: var(--text-dim); }
+.page #set-zoom-val {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Range (zoom): filled track + transform-only thumb states          */
+/*    --fill is written by settings.js (syncZoomLabel).                 */
+/* ------------------------------------------------------------------ */
+
+.page .page-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  margin: 4px 0;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--accent);   /* fallback where the parts below miss */
+}
+.page .page-range:focus { outline: none; }
+.page .page-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    var(--accent) 0 var(--fill, 50%),
+    var(--stg-field) var(--fill, 50%) 100%);
+}
+.page .page-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;              /* centre on the 4px track */
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  /* Контакт + амбиент + верхний спекуляр: тумб читается объектом, а не
+     наклейкой. */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 3px 8px rgba(0, 0, 0, 0.22),
+              inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.18s var(--ease-spring), box-shadow 0.18s ease;
+}
+.page .page-range:hover::-webkit-slider-thumb { transform: scale(1.15); }
+.page .page-range:active::-webkit-slider-thumb {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.page .page-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 3px 8px rgba(0, 0, 0, 0.22),
+              0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+/* Plain-browser / Firefox fallback (shell also opens outside WebView2). */
+.page .page-range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--stg-field);
+}
+.page .page-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.page .page-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 3px 8px rgba(0, 0, 0, 0.22);
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Toggle switch 40x24 — knob moves with transform only              */
+/* ------------------------------------------------------------------ */
+
+.page .switch-row { min-height: 44px; padding: 8px 0 0; }
+.page .switch-row + .switch-row { margin-top: 4px; }
+.page .switch-title { font-size: 13px; font-weight: 600; }
+.page .switch-sub { font-size: 11px; color: var(--text-dim); }
+
+.page .switch-ui {
+  width: 40px;                   /* was 42px — spec size */
+  height: 24px;
+  border: 1px solid var(--stg-field-border);
+  border-radius: 999px;
+  background: var(--stg-field);
+  /* scale — тактильное проседание трека при нажатии строки
+     (.switch-row.is-pressed в app.css); пружина та же, что у squish'а. */
+  transition: background 0.2s ease, border-color 0.2s ease,
+              scale .18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.page .switch-ui::after {
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  /* Transform-only knob: no left/top animation — compositor-cheap and
+     the geometry is fixed by the 40px track. */
+  transition: transform 0.2s var(--ease-spring), background 0.2s ease;
+  will-change: transform;
+}
+.page .switch-input:checked + .switch-ui {
+  background: var(--accent);
+  border-color: transparent;
+}
+.page .switch-input:checked + .switch-ui::after {
+  transform: translateX(16px);   /* 40 - 18 - 2*3 = 16 */
+  background: var(--on-accent);
+}
+.page .switch-row:hover .switch-ui { background: var(--stg-field-hover); }
+/* Hover on the ON state darkens the accent — lightening would push the
+   white knob under 3:1 (non-text contrast). */
+.page .switch-row:hover .switch-input:checked + .switch-ui {
+  background: color-mix(in srgb, var(--accent) 86%, #000);
+}
+/* Press: squash the knob in place (fits either position). */
+.page .switch-row:active .switch-ui::after { transform: scaleX(0.88); }
+.page .switch-row:active .switch-input:checked + .switch-ui::after {
+  transform: translateX(16px) scaleX(0.88);
+}
+.page .switch-input:focus-visible + .switch-ui {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.page .switch-input:disabled + .switch-ui { opacity: 0.4; }
+.page .switch-row:has(.switch-input:disabled) { cursor: not-allowed; }
+
+/* ------------------------------------------------------------------ */
+/* 6. Palette picker: radio-style swatches with a ring highlight        */
+/* ------------------------------------------------------------------ */
+
+.page .palette-row { margin-top: 8px; }
+.page .palette-row .swatch-grid { gap: 8px; margin: 0; }
+.page .palette-row .swatch { width: 26px; height: 26px; }
+.page .swatch { border-radius: 50%; }
+.page .swatch:hover { transform: scale(1.12); }
+.page .swatch:active { transform: scale(0.94); }
+/* Selected = "radio": dark gap ring + accent ring (no glow blur). */
+.page .swatch.active {
+  box-shadow: 0 0 0 2px var(--swatch-ring), 0 0 0 4px var(--accent);
+}
+/* The mode toggle lives in the same row: match the 26px swatch scale. */
+.page .palette-row .swatch-mode svg { width: 14px; height: 14px; }
+.page .palette-random { width: 28px; height: 28px; }
+.page .palette-random svg { width: 14px; height: 14px; }
+.page .palette-random:hover { opacity: 1; }
+
+/* ------------------------------------------------------------------ */
+/* 7. Buttons: ghost + the single primary ("Готово")                    */
+/* ------------------------------------------------------------------ */
+
+.page .settings-btn {
+  min-height: 36px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--stg-field-border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease,
+              transform 0.15s var(--ease-spring);
+}
+.page .settings-btn:hover {
+  background: var(--stg-field-hover);
+  border-color: var(--border-strong);
+}
+.page .settings-btn:active { transform: scale(0.98); }
+.page .settings-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Строка с действием, а не с тумблером (показ приветствия снова): общий
+   вид switch-row, но правая часть — кнопка, поэтому курсор не «палец» и
+   строка не нажимается целиком. */
+.page .switch-row-action { cursor: default; }
+
+/* Токен фона карточки: если скин его не объявил, панель настроек
+   становится прозрачной и текст лежит прямо на рабочем столе. */
+.page { background: var(--bg-a, #08090b); }
+
+/* Кнопка в такой строке — по содержимому, а не на всю ширину.
+   Это отдельное правило вот почему: базовый .settings-btn в app.css задаёт
+   width: 100 % (кнопки живут в .btn-row, где растягиваться правильно).  В
+   строке с текстом слева эти 100 % отсчитывались от СВОЕЙ колонки и
+   забирали место у текста: заголовок сжимался в столбик по одному слову
+   («Приветствие / первого / запуска»), а кнопка уезжала в середину строки.
+   Здесь width: auto и запрет сжиматься — текст переносится по своей
+   колонке, кнопка стоит справа по центру. */
+.page .switch-row-action .switch-title { white-space: normal; }
+.page .switch-row-action .settings-btn {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  white-space: nowrap;
+}
+
+.page .settings-btn.page-done {
+  min-width: 112px;
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+  /* Цветная тень primary-кнопки (m5: токен --shadow-accent из Wave 8
+     получает потребителя).  Статичная — без transition. */
+  box-shadow: var(--shadow-accent);
+}
+/* Hover/press darken instead of brighten: a lighter accent drops the
+   white 13px label below 4.5:1 (AA).  Darkening only raises it.
+   filter:none kills the app.css brightness(1.1) hover so the two don't
+   stack. */
+.page .settings-btn.page-done:hover {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+  border-color: transparent;
+  filter: none;
+}
+.page .settings-btn.page-done:active {
+  background: color-mix(in srgb, var(--accent) 76%, #000);
+  border-color: transparent;
+  transform: scale(0.98);
+  filter: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 8. Hotkeys table                                                     */
+/* ------------------------------------------------------------------ */
+
+.page .hotkeys td { padding: 8px 0; }
+.page .hotkeys td:last-child { color: var(--text-dim); }
+.page .hotkeys kbd {
+  padding: 2px 6px;
+  background: var(--stg-field);
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ */
+/* 9. Downloads rows                                                    */
+/* ------------------------------------------------------------------ */
+
+#downloads-page .page-empty { color: var(--text-dim); }
+
+.page .dl-item {
+  padding: 12px 16px;
+  background: var(--stg-field);
+  border: 1px solid var(--stg-field-border);
+  border-radius: var(--radius-lg);
+  /* Entry animation only on genuinely new rows (.dl-new): downloads.js
+     replaces updated rows, and the host ticks at ~10 Hz — an unscoped
+     animation would replay on every tick. */
+  animation: none;
+  transition: border-color 0.15s ease;
+}
+.page .dl-item.dl-new { animation: dl-row-in 0.2s var(--ease-spring); }
+.page .dl-item:hover { border-color: var(--border-strong); }
+
+.page .dl-item.st-downloading .dl-state,
+.page .dl-item.st-paused .dl-state { color: var(--accent-soft); }
+.page .dl-item.st-canceled .dl-name,
+.page .dl-item.st-error .dl-name { color: var(--text-dim); }
+.page .dl-state.bad { color: var(--danger); }
+
+.page .dl-act {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--stg-field-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  transition: background 0.15s ease, color 0.15s ease,
+              transform 0.15s var(--ease-spring);
+}
+.page .dl-act:hover { background: var(--stg-field-hover); color: var(--text); }
+.page .dl-act:active { transform: scale(0.92); }
+.page .dl-act.dl-cancel:hover { background: var(--danger-soft); color: var(--danger-text); }
+
+.page .dl-bar { background: var(--stg-field); }
+/* Width is never animated: downloads.js already drives the fill with
+   scaleX (app.css .dl-bar span).  A width transition here would re-layout
+   the whole list on every progress tick AND override that transform sync. */
+.page .dl-bar span { transition: transform 0.25s ease; }
+
+/* ------------------------------------------------------------------ */
+/* 9b. Оптимизация: очистка данных + строка статуса                     */
+/* ------------------------------------------------------------------ */
+
+.page .opt-data-label { margin: 16px 0 8px; }
+.page .opt-clear-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Маленькие кнопки: тап-зона 44px держится за счёт min-height строки
+   в родителе, сами кнопки ниже и в одну линию с полем.  Без flex:1 они
+   ужимались до текста, а «Всё» с margin-left:auto разъезжалось по всей
+   ширине — теперь четыре равные кнопки в ряд. */
+.page .opt-clear {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.page .opt-clear-all {
+  color: var(--text-dim);
+}
+.page .opt-clear-all:hover { color: var(--text); }
+.page .opt-status {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ */
+/* 10. Keyboard focus coverage (extends the app.css :focus-visible list)*/
+/* ------------------------------------------------------------------ */
+
+.page .settings-btn:focus-visible,
+.page .page-select:focus-visible,
+.page .swatch:focus-visible,
+.page .bubble-close:focus-visible,
+.page .dl-act:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 11. prefers-reduced-motion: fallback for every new transition        */
+/*     (body.no-anim kill-switch already nukes all of these too.)       */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .page .page-card,
+  .page .bubble-close,
+  .page .page-select,
+  .page .page-input,
+  .page .page-range,
+  .page .page-range::-webkit-slider-thumb,
+  .page .page-range::-moz-range-thumb,
+  .page .switch-ui,
+  .page .switch-ui::after,
+  .page .settings-btn,
+  .page .swatch,
+  .page .dl-item,
+  .page .dl-item.dl-new,
+  .page .dl-act,
+  .page .dl-bar span {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 12. Settings page layout: head / nav chips / scroll / foot           */
+/*                                                                      */
+/* app.css defines .page-head and .page-foot only inside .page-card and */
+/* forgets display:flex on .page-head, so the title block and the × sit */
+/* on one text line and the header collapses to a 12px sliver.  The     */
+/* section chips also give the long page a map: six groups, one scroll  */
+/* bar, one filled chip that follows the scroll position.               */
+/* ------------------------------------------------------------------ */
+
+.page .page-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Chips: horizontal, wrap on narrow windows, no visible scrollbar. */
+.page-nav {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 2px;
+}
+.page-nav-chip {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--text-dim);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.page-nav-chip:hover { color: var(--text); background: var(--hover); }
+.page-nav-chip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.page-nav-chip.is-active {
+  color: var(--text);
+  background: var(--tab-active, var(--hover));
+  border-color: var(--hairline);
+  /* Маркер активной секции: акцентная кромка снизу — карта настроек
+     читается как «ты здесь», без единого layout-свойства. */
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* The scroll column starts right under the chips; the 8px right padding
+   leaves room for the scrollbar so content is not clipped by it. */
+.page .page-scroll {
+  scroll-behavior: smooth;
+  scroll-padding-top: 8px;
+  outline: none;
+}
+.page .page-section {
+  /* A jump target must not hide under the sticky chip row. */
+  scroll-margin-top: 8px;
+}
+
+/* The foot is the fixed bottom bar: a hairline, version on the left,
+   the action on the right — it never scrolls with the content. */
+.page .page-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--stg-divider);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page .page-scroll { scroll-behavior: auto; }
+  .page-nav-chip { transition: none; }
+}

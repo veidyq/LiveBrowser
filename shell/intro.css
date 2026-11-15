@@ -1,0 +1,372 @@
+/* intro.css — экран первого запуска (intro.js).
+ *
+ * Направление «Blue Hour»: продукт показывает себя в своём же свете.
+ * Палитра не выдумана, а взята из токенов LiveBrowser (--accent #5e6ad2,
+ * --bg-a #08090b) и смещена в сумеречную синеву: фон глубже рабочего стола,
+ * акцент тот же индиго, второй акцент — голубой холод, чтобы свет в кадре
+ * читался как стекло, а не как неон.  Кислотных цветов и чужих брендов нет.
+ *
+ * Производительность: всё, что двигается, двигается transform/opacity.
+ * Ни одного layout-свойства (top/left/width/margin) во время кадра.  blur
+ * запечён в фоне неподвижных слоёв: размытые градиенты на градиентах, а не
+ * backdrop-filter — backdrop читает и пересчитывает всё под собой каждый
+ * кадр, а для заставки это лишний x3 к цене композитора.
+ *
+ * Слои (снизу вверх) — четыре объекта, ничего больше:
+ *   1 .intro-scrim     — затемняющий слой; к концу прозрачнеет
+ *   2 .intro-sky-group — сумеречный фон + два мягких света
+ *   3 .intro-viewport  — «камера»; имя, подзаголовок, кнопки, подпись
+ *   4 .intro-tail      — кольцо света, гаснет с фоном
+ *
+ * Уход гасит .intro-viewport целиком (одно свойство, одна кривая), поэтому
+ * отдельных правил затухания у имени и кнопок здесь нет — иначе два таймера
+ * на одном кадре разъезжаются.
+ *
+ * reduced motion: is-quiet — текст уже стоит в финальном кадре, свет
+ * статичен.  is-still — вообще без переходов.
+ */
+
+.intro {
+  /* Локальные краски кадра.  Живут на корне, чтобы палитры пользователя
+     (aurora/ocean/…) не перекрашивали заставку: это не интерфейс, это
+     свет продукта. */
+  --intro-ink: #05060a;
+  --intro-indigo: #6e79e0;
+  --intro-blue: #7cd0ff;
+  --intro-dust: #c6d4ff;
+  --intro-spark: rgba(150, 168, 255, 0.92);        /* индиго-искры удара */
+  --intro-spark-cool: rgba(124, 208, 255, 0.92);   /* голубые искры удара */
+  --intro-glass: rgba(255, 255, 255, 0.055);
+  --intro-line: rgba(255, 255, 255, 0.14);
+  --intro-hair: rgba(255, 255, 255, 0.08);
+  --intro-text: #f2f3f7;
+  --intro-dim: #a6abba;
+  --intro-faint: #7b8093;
+
+  position: fixed;
+  inset: 0;
+  z-index: 120;            /* выше всех слоёв оболочки (меню 95, палитра 85) */
+  overflow: hidden;
+  background: var(--intro-ink);
+  color: var(--intro-text);
+  font-family: "JetBrains Mono", ui-monospace, "Segoe UI", system-ui, sans-serif;
+  /* Без выделения текста и без курсора-подсказок: это экран, а не страница. */
+  user-select: none;
+  -webkit-user-select: none;
+  /* Переход наружу: раскрытие двери, а не вспышка.  opacity/transform
+     только — слой композиторный до и после. */
+  opacity: 1;
+  transition: opacity 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.intro[hidden] { display: none; }
+.intro.is-closing { opacity: 0; pointer-events: none; }
+
+/* Сценарный слой: затемняет рабочий стол под заставкой.  К концу падает в
+   0 — под интро уже лежит финальный кадр продукта, переход без белого и
+   без сдвига раскладки: заставка ничего не двигает под собой. */
+.intro-scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 50% 42%, #0a0c14 0%, #05060a 62%, #030408 100%);
+  will-change: opacity;
+}
+
+/* ---- 2. Сумеречное небо --------------------------------------------- */
+
+/* Свет быстро меняется, но ничего не двигается: два радиальных градиента,
+   собранных в один слой, и лампочка-семя.  Движется только opacity и
+   transform всей группы — композитор не пересобирает градиенты.
+
+   Группа (.intro-sky-group) появилась ради одного свойства: непрозрачность
+   проявляющегося света живёт на НЕЙ, а не на .intro-sky.  Оба лежат внутри
+   «камеры», которая сдвигается каждый кадр; opacity на дочернем слое
+   заставлял бы движок либо сливать свет с прозрачной группой (и тогда
+   каждый сдвиг камеры перерисовывает оба градиента заново), либо держать
+   для него отдельный буфер.  На границе группы картинка сливается в
+   плоский слой один раз — дальше её только двигают. */
+.intro-sky-group {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  will-change: opacity;
+  pointer-events: none;
+}
+.intro-sky {
+  position: absolute;
+  inset: -10%;
+  opacity: 1;
+  transform: scale(1.1);
+  will-change: transform;
+  /* Градиенты не пересчитываются: слой запечён в буфере и только
+     масштабируется композитором. */
+  contain: paint;
+  background:
+    radial-gradient(52% 38% at 50% 34%, rgba(110, 121, 224, 0.30) 0%, rgba(110, 121, 224, 0.06) 46%, transparent 70%),
+    radial-gradient(38% 30% at 62% 62%, rgba(124, 208, 255, 0.13) 0%, transparent 66%),
+    radial-gradient(70% 52% at 50% 118%, rgba(20, 24, 44, 0.9) 0%, transparent 70%);
+}
+.intro-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(46px);
+  opacity: 0.7;
+}
+.intro-glow-a {
+  width: 54vmax; height: 54vmax;
+  left: calc(50% - 27vmax); top: calc(34% - 27vmax);
+  background: radial-gradient(closest-side, rgba(110, 121, 224, 0.55), transparent 72%);
+}
+.intro-glow-b {
+  width: 34vmax; height: 34vmax;
+  left: calc(62% - 17vmax); top: calc(60% - 17vmax);
+  background: radial-gradient(closest-side, rgba(124, 208, 255, 0.24), transparent 72%);
+}
+/* Семя: точка, из которой рождается марка.  Светится «как экран в темноте». */
+/* ---- 3. Камера и canvas --------------------------------------------- */
+
+.intro-viewport {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  /* Без preserve-3d и без perspective: камера теперь двигается только
+     сдвигом, а 3D-контекст заставлял движок растрировать текст через
+     промежуточный буфер — на крупных буквах это читалось как блюр. */
+}
+/* Canvas-пыль: только пиксели, никакого DOM. */
+.intro-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* Канвас пуст по построению (частиц в этом фильме нет) — пусть движок
+     знает это и не ходит в него при отрисовке кадра. */
+  contain: strict;
+}
+
+/* ---- 7. Имя, подзаголовок, кнопки ----------------------------------- */
+
+/* Крупная и уверенная: Orbitron для имени (он уже в продукте и уже
+   предзагружен), JetBrains Mono для всего остального.  Нет ни одного
+   нового сетевого шрифта. */
+.intro-name-mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Высота под новый кегль (clamp 52–124px): иначе строка обрезается
+     по нижней линии. */
+  top: calc(50% - clamp(96px, 15vmin, 136px));
+  height: clamp(72px, 14vmin, 148px);
+  overflow: visible;
+  pointer-events: none;
+}
+.intro-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  margin: 0;
+  padding: 0.08em 0;
+  text-align: center;
+  /* Системный шрифт, а не Orbitron: у него правильные пропорции и он не
+     читается как «техно-постер».  Дорогая типографика — это кегль,
+     вес и трекинг, а не декоративный гарнитур. */
+  font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: clamp(52px, 10.5vmin, 124px);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.04;
+  white-space: nowrap;
+  color: var(--intro-text);
+  /* Никакого text-shadow: на крупном кегле даже 40px размытое свечение
+     читается как «текст не в фокусе», а не как свет.  Резкая кромка. */
+  opacity: 0;
+  will-change: opacity, transform, letter-spacing;
+}
+/* Маска-градиент убрана вместе с посимвольным въездом: имя проявляется
+   целиком, значит обрезать его нечем и незачем. */
+.intro-name span {
+  display: inline-block;
+  opacity: 1;
+}
+
+.intro-tagline-mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Под новым кеглем имени: строка идёт сразу под ним, а не в 250px. */
+  top: calc(50% + clamp(44px, 8vmin, 92px));
+  height: 1.9em;
+  overflow: hidden;
+  pointer-events: none;
+}
+.intro-tagline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  margin: 0;
+  text-align: center;
+  font-size: clamp(13px, 1.6vmin, 16px);
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  color: var(--intro-dim);
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.intro-ctas {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(72px, 12vh, 132px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  /* translateX(-50%) ставит PAINT, поэтому сейчас выставлен полный
+     translate3d — иначе первый кадр дёрнется влево на полширины. */
+  transform: translate3d(-50%, 0, 0);
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+/* «Начать» — единственная кнопка: только текст, без блока.  Раз других
+   действий нет, у неё весь вес кадра: крупный кегль, средний вес,
+   волосяная линия под текстом как единственный «материал».
+   Кегль в vmin, чтобы на большом экране кнопка росла вместе с именем,
+   но оставалась меньше него. */
+.intro-start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 6px;
+  border: 0;
+  border-bottom: 1px solid rgba(190, 200, 255, 0.45);
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  font-size: clamp(18px, 2.4vmin, 26px);
+  font-weight: 450;
+  letter-spacing: 0.005em;
+  line-height: 1;
+  color: var(--intro-text);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+.intro-start:hover {
+  color: #fff;
+  border-bottom-color: rgba(215, 225, 255, 0.9);
+}
+.intro-start:active { opacity: 0.7; }
+
+.intro-start:focus-visible {
+  outline: 2px solid var(--intro-blue);
+  outline-offset: 6px;
+  border-radius: 2px;
+}
+
+.intro-notes {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(30px, 5.4vh, 62px);
+  width: min(560px, calc(100vw - 48px));
+  margin: 0;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--intro-faint);
+  opacity: 0;
+}
+
+/* ---- 8. Хвост кадра -------------------------------------------------- */
+
+/* Кольцо света вокруг финального кадра: то же место, где заканчиваются
+   свет и тень.  Гаснет последним — глаз не замечает исчезновения слоёв. */
+.intro-tail {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(54% 42% at 50% 52%, transparent 40%, rgba(0, 0, 0, 0.42) 100%);
+  opacity: 0;
+}
+
+/* ---- Плёнка HyperFrames как источник кадра --------------------------- */
+
+/* Рендер той же композиции (integrations/hyperframes).  Лежит над DOM,
+   потому что показывает ровно то, что DOM сейчас строит по t.  Никакого
+   звука: звука в интро нет вовсе. */
+.intro-film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  background: #05060a;
+}
+.intro.is-film .intro-film { opacity: 1; }
+
+/* ---- reduced motion / «Анимации: выкл» ------------------------------- */
+
+/* is-quiet: типографическая карточка.  Свет показан в финальной позе,
+   частиц нет (их не рисует JS), а переход наружу — мгновенный. */
+.intro.is-quiet .intro-glow,
+.intro.is-quiet .intro-tail { display: none; }
+
+.intro.is-quiet .intro-sky-group { opacity: 1; }
+.intro.is-quiet .intro-sky {
+  opacity: 1;
+  transform: none;
+  /* Один статичный свет вместо двух движущихся. */
+  background: radial-gradient(60% 46% at 50% 34%, rgba(110, 121, 224, 0.22), transparent 72%);
+}
+
+.intro.is-quiet .intro-name { opacity: 1; transform: none; letter-spacing: 0.01em; }
+.intro.is-quiet .intro-name span { opacity: 1; transform: none; }
+.intro.is-quiet .intro-tagline,
+.intro.is-quiet .intro-ctas,
+.intro.is-quiet .intro-notes { opacity: 1; }
+.intro.is-quiet .intro-tagline { transform: none; }
+.intro.is-quiet .intro-ctas { transform: translate3d(-50%, 0, 0); }
+
+/* is-still: «Анимации: выкл» в продукте.  Ни одного перехода. */
+.intro.is-still,
+.intro.is-still * { transition: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro { transition: none; }
+}
+
+/* ---- Узкие окна ------------------------------------------------------ */
+
+/* Телефонная ширина: кнопки столбиком, снизу, не обрезаются.  Высоты сцены
+   пересчитаны — при 560px панель не должна лезть под имя. */
+@media (max-width: 560px) {
+  .intro-name-mask {
+    top: calc(50% + 124px);
+    height: clamp(36px, 11vmin, 52px);
+  }
+  .intro-name { font-size: clamp(30px, 9.4vmin, 46px); }
+  .intro-tagline-mask { top: calc(50% + 178px); }
+  .intro-tagline { font-size: 13px; }
+  .intro-ctas {
+    bottom: max(24px, env(safe-area-inset-bottom, 0px) + 18px);
+    flex-direction: column-reverse;
+    width: calc(100vw - 40px);
+    gap: 8px;
+  }
+  .intro-start { width: 100%; justify-content: center; }
+  .intro-notes { display: none; }
+}
+
+/* Очень короткое окно (ноутбук с открытой панелью задач / маленькая высота):
+   имя и кнопки остаются в кадре, подпись уходит — она не обязательна. */
+@media (max-height: 520px) {
+  .intro-tagline-mask { display: none; }
+  .intro-name-mask { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 92px); }
+  .intro-notes { display: none; }
+  .intro-ctas { bottom: max(16px, env(safe-area-inset-bottom, 0px) + 12px); }
+}

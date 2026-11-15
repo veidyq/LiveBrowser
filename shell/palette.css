@@ -1,0 +1,252 @@
+/* LiveBrowser command palette (Ctrl+K) — a Raycast-style glass overlay.
+   Lives entirely inside #palette-root; app.css is not touched.  The palette
+   only becomes visible while open, so it never interferes with the omnibox
+   or the mode-omni bar state.  Layer budget: bar 30, bubble 40, jump 60,
+   settings sheet 70, fullscreen pages 75, toasts 80 — the palette is the
+   top-most command surface (85), toasts yield to it while it is open. */
+
+.palette {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(48px, 16vh, 148px) 16px 16px; /* centre-top, like Raycast */
+  background: var(--scrim);
+  /* No full-screen backdrop blur: it makes Chromium drop chrome-bar's layer. */
+  opacity: 0;
+  transition: opacity 0.18s cubic-bezier(0.3, 0, 0.3, 1);
+}
+.palette.open { opacity: 1; }
+.palette[hidden] { display: none; }
+
+.palette-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: min(480px, calc(100vh - 88px));
+  border-radius: var(--radius-xl); /* 14 */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 13, 16, 0.72);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow: var(--shadow-2), var(--glass-spec);
+  color: var(--text);
+  overflow: hidden;
+  /* Entry/exit: scale + opacity only — geometry of the native views below
+     never depends on this panel.  Пружинный выезд (перелёт ~1.24): панель
+     «всплывает» физическим объектом, а не линейным фейдом. */
+  transform: scale(0.96);
+  transition: transform 0.24s cubic-bezier(0.3, 1.24, 0.36, 1);
+}
+.palette.open .palette-panel { transform: scale(1); }
+
+/* The dark glass is tuned for the dark desk; on the light shell it flips so
+   the palette does not glow like a black hole over the light bar. */
+[data-theme="light"] .palette-panel {
+  background: rgba(250, 251, 253, 0.82);
+  border-color: rgba(10, 12, 16, 0.10);
+}
+
+/* Instant open/close: the shell's no-anim kill switch and the OS preference. */
+@media (prefers-reduced-motion: reduce) {
+  .palette, .palette-panel { transition: none !important; }
+}
+body.no-anim .palette,
+body.no-anim .palette-panel { transition: none !important; }
+
+/* ---- Head: the query input ---- */
+
+.palette-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+.palette-glyph { display: grid; place-items: center; color: var(--text-faint); }
+.palette-glyph svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.palette-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  caret-color: var(--accent);
+}
+.palette-input::placeholder { color: var(--text-faint); font-weight: 400; }
+
+.palette kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--field);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+.palette-esc { flex: 0 0 auto; text-transform: lowercase; }
+
+/* ---- Row list ---- */
+
+.palette-list {
+  position: relative; /* row offsetTop is measured against this box */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.palette-group {
+  padding: 10px 12px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  user-select: none;
+}
+
+/* Каскад строк (palette.js ставит ступень в animationDelay; fill backwards
+   держит 0-кадр до старта ступени).  Только transform/opacity. */
+.pal-row.pal-row-in {
+  animation: pal-row-in 0.24s cubic-bezier(0.3, 1.12, 0.4, 1) backwards;
+}
+@keyframes pal-row-in {
+  from { opacity: 0; transform: translateX(-6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pal-row.pal-row-in { animation: none; }
+}
+
+/* ".pal-row", not ".palette-row": app.css already owns that class for the
+   settings page's swatch row, and this sheet loads after it. */
+.pal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.pal-row:focus { outline: none; } /* the .active highlight is the focus */
+.pal-row.active { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+/* Тактильность строки палитры: мягкий hover и «нажим» — как у .suggest
+   и .link-tile, чтобы вся командная поверхность отзывалась одинаково.
+   .pal-row ловит .is-pressed от feel.js, и этот список перебивает
+   пружину возврата app.css — transform/scale .32s (0.34,1.56,0.64,1)
+   обязаны остаться в списке, иначе отпускание щёлкает рывком. */
+.pal-row {
+  transition: background-color 0.05s linear,
+              transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+              scale 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.pal-row:hover { background: var(--hover, rgba(255, 255, 255, 0.06)); }
+.pal-row:active { transform: scale(0.985); }
+
+.pr-icon {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--text-dim);
+}
+.pr-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pr-fav { width: 16px; height: 16px; border-radius: 4px; object-fit: cover; }
+
+.pr-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.pr-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-sub { font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Matched characters glow with the accent (search.js uses <b>, the palette
+   uses <mark> for its own styling). */
+.pr-title mark,
+.pr-sub mark {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.pr-badge {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.palette-empty {
+  flex: 0 0 auto;
+  padding: 26px 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* ---- Footer: key hints ---- */
+
+.palette-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--hairline);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  user-select: none;
+}
+.palette-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}

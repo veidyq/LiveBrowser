@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="LiveBrowser">
+  <title>LiveBrowser</title>
+  <!--
+    Hand-editable copy of the app mark.  build-logo/draw.py is what actually
+    produces host/app.ico and the PNG frames; this file exists so the shape can
+    be read, tweaked and previewed as text.
+
+    The mark is a disc holding three shapes: an open white ring with round caps
+    (the "on air" ring, and a C that curls like a tab), a solid core in the
+    middle (the signal that is live now), and a cyan spark sitting in the ring's
+    gap.  The spark is the only saturated colour, so the eye lands where the
+    mark is moving.
+
+    Two earlier marks were dropped.  An L built from an address bar and a tab
+    rail read as the Cyrillic capital "Г".  A rounded tile with a window pane
+    had no silhouette: at 16 px it was a square blob, like every other square
+    blob on a dark taskbar.  A disc always reads as a disc.
+
+    Small sizes drop detail: build-logo/draw.py renders 16/24/32 with a wider
+    ring, a bigger core and an outward-shifted spark, because a thin ring closes
+    into a donut at that size.
+  -->
+  <defs>
+    <radialGradient id="disc" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#8A94F0"/>
+      <stop offset="1" stop-color="#404AB4"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#5E6AD2" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#5E6AD2" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <!-- Hairline rim, so the disc does not merge into a dark taskbar. -->
+  <circle cx="128" cy="128" r="126" fill="none" stroke="#8C95EE" stroke-width="2"/>
+
+  <!-- Body: a radial gradient lit from the centre. -->
+  <circle cx="128" cy="128" r="122" fill="url(#disc)"/>
+
+  <!-- Soft well behind the ring. -->
+  <circle cx="128" cy="128" r="96" fill="url(#glow)" filter="url(#soft)"/>
+
+  <!-- The open ring: radius 62, 20 wide, from minus 42 deg round to 292 deg. -->
+  <path d="M 174.1 86.5 A 62 62 0 1 0 151.2 181.4"
+        fill="none" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round"/>
+
+  <!-- The spark, in the gap at about 2 o'clock. -->
+  <circle cx="208" cy="94" r="13" fill="#2ED3C0"/>
+
+  <!-- The core. -->
+  <circle cx="128" cy="128" r="23" fill="#FFFFFF"/>
+</svg>

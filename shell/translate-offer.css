@@ -1,0 +1,345 @@
+/* LiveBrowser translate offer: the "Перевести страницу?" capsule that lives
+   INSIDE the bar (over a site tab the ui view is clipped to the 56px bar and
+   cannot paint over the site view), plus the translated-text dialog that the
+   host overlay channel stretches the ui view over (like settings).  All
+   selectors are .translate-* / .td-* / .to-* — no collisions with the rest
+   of the shell.  Loaded from index.html after app.css (tokens come from it). */
+
+/* ---- the offer capsule ---- */
+/* The capsule is a flex ITEM of the bar, placed after .bar-actions, so it
+   takes part in the bar's layout instead of floating over it.
+   Why it is not absolutely positioned (what went wrong before): every child
+   of .chrome-bar is `.chrome-bar > * { position:relative; z-index:1 }`.
+   That rule outranks `.translate-offer` in specificity and, with a higher
+   z-index, a positioned sibling that sits ABOVE the capsule in DOM order
+   (bar-actions, win-controls) paints over it.  An absolutely positioned box
+   reserved no space either — the right cluster's buttons were drawn on top
+   of the capsule and swallowed its clicks.  As a flex item nothing can be
+   painted over it and the strip gives way to it. */
+.translate-offer {
+  position: relative;
+  z-index: 20; /* above the bar's own children (1) */
+  flex: 0 1 auto;
+  /* Сжиматься капсула должна РАНЬШЕ стрипа вкладок: иначе на узком окне
+     (семь вкладок + капсула) стрип уезжал в один-полтора видимых таба,
+     а капсула оставалась во весь свой контент.  Вес усадки 3 против
+     стриповых 2, плюс ниже — компакция содержимого на узких ширинах. */
+  flex-shrink: 3;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 4px 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--hover);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-1, 0 1px 2px rgba(0, 0, 0, 0.3));
+  /* The bar's flex row centres it vertically; the entrance animation owns
+     transform, so no translateY/negative margin is layered on top. */
+  margin-right: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: to-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.translate-offer[hidden] { display: none; }
+body.no-anim .translate-offer { animation: none; }
+
+@keyframes to-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Излёт — зеркало входа (Smoothness Law): бар уезжает вниз с fade, hidden
+   ставит translate-offer.js по animationend (токен отменяет излёт при
+   мгновенном повторном показе). */
+.translate-offer.to-out {
+  animation: to-out 0.16s cubic-bezier(0.4, 0, 0.7, 1) forwards;
+  pointer-events: none;
+}
+@keyframes to-out {
+  to { opacity: 0; transform: translateY(6px); }
+}
+body.no-anim .translate-offer.to-out { animation: none; }
+
+/* Статус-строка: гаснет тем же каналом opacity. */
+.translate-toast.to-out {
+  animation: tt-out 0.14s cubic-bezier(0.4, 0, 0.7, 1) forwards;
+}
+@keyframes tt-out {
+  to { opacity: 0; }
+}
+body.no-anim .translate-toast.to-out { animation: none; }
+
+.translate-offer .to-icon { display: grid; place-items: center; flex: 0 0 auto; color: var(--accent); }
+.translate-offer .to-icon svg {
+  width: 16px; height: 16px;
+  fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round;
+}
+.translate-offer .to-title { font-weight: 600; }
+
+.translate-offer .to-lang {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  padding: 0 6px 0 9px;
+  border-radius: 999px;
+  color: var(--text-dim);
+  background: var(--field);
+  cursor: pointer;
+}
+.translate-offer .to-lang svg {
+  width: 12px; height: 12px;
+  fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round;
+}
+/* The native select covers the pill: the pill is the look, the select the
+   behaviour (keyboard, popup list). */
+.translate-offer .to-lang-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.translate-offer .to-go {
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--on-accent);
+  background: var(--accent);
+  cursor: pointer;
+  /* Цветная тень primary-кнопки (потребитель токена --shadow-accent). */
+  box-shadow: var(--shadow-accent);
+  transition: background-color 0.12s ease, transform 0.12s ease;
+}
+/* Контраст-паттерн проекта (P2-3): hover на акценте ЗАТЕМНЯЕТ, а не
+   высветляет — белый текст держит контраст (filter: brightness() поднимал
+   белый текст из-под 4.5:1). */
+.translate-offer .to-go:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+.translate-offer .to-go:active { transform: scale(0.96); }
+.translate-offer .to-go:disabled { opacity: 0.75; cursor: default; }
+.translate-offer .to-go:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.translate-offer .to-close {
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  border: 0;
+  border-radius: 50%;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: transparent;
+  cursor: pointer;
+}
+.translate-offer .to-close:hover { color: var(--text); background: var(--hover); }
+
+/* Spinner while the request is in flight: the button text turns into
+   "Переводим…" (JS) and the globe spins. */
+.translate-offer.busy .to-icon svg { animation: to-spin 0.9s linear infinite; transform-origin: 12px 12px; }
+body.no-anim .translate-offer.busy .to-icon svg { animation: none; }
+@keyframes to-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .translate-offer { animation: none; }
+  .translate-offer.busy .to-icon svg { animation: none; }
+}
+
+/* Narrow windows: keep the essentials, drop the question mark wording. */
+@media (max-width: 760px) {
+  .translate-offer .to-title { display: none; }
+}
+/* Typing mode hides the strip and the action cluster next to the capsule:
+   the capsule stays (the offer is about the page, not about typing) and
+   slides into their place without a hop. */
+.chrome-bar.mode-omni .translate-offer { margin-left: auto; }
+
+/* ---- small status line under the bar (Переводим… / error) ---- */
+/* While site-active the ui view is clipped to the bar: the status line sits
+   INSIDE the bar's lower edge, right above the navigation strip. */
+.translate-toast {
+  position: fixed;
+  top: calc(var(--bar-h) - 30px);
+  right: 12px;
+  z-index: 45; /* above the bar (30), below the fullscreen overlays (75) */
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--panel-strong);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-2);
+  pointer-events: none;
+}
+.translate-toast[hidden] { display: none; }
+
+/* ---- translated-text dialog ---- */
+.translate-dialog {
+  position: fixed;
+  top: calc(var(--bar-h) + 10px);
+  left: 50%;
+  z-index: 50; /* above the bar and its capsule, below settings/palette (75) */
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100% - 32px));
+  max-height: calc(100% - var(--bar-h) - 32px);
+  border-radius: 14px;
+  background: var(--panel-strong);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-2), var(--glass-spec, 0 0 0 rgba(0, 0, 0, 0));
+  transform: translate(-50%, 8px);
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.translate-dialog[hidden] { display: none; }
+.translate-dialog.show { opacity: 1; transform: translate(-50%, 0); }
+body.no-anim .translate-dialog { transition: none; }
+
+.td-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+.td-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.td-eyebrow { font-size: 13px; font-weight: 600; }
+.td-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.td-langs { display: flex; align-items: center; gap: 10px; }
+.td-lang { display: flex; flex-direction: column; gap: 3px; font-size: 10px; color: var(--text-faint, var(--text-dim)); }
+.td-lang select {
+  height: 28px;
+  padding: 0 24px 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border, var(--hairline));
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+.td-close { flex: 0 0 auto; }
+
+.td-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.td-orig, .td-trans { padding: 14px 16px; user-select: text; }
+.td-orig { border-right: 1px solid var(--hairline); }
+.td-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint, var(--text-dim));
+}
+.td-orig-text, .td-trans-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.td-orig-text { color: var(--text-dim); }
+.td-trans-text { color: var(--text); }
+
+/* Loading: the translation column shimmers instead of jumping layout. */
+.translate-dialog.loading .td-trans-text { min-height: 48px; }
+.translate-dialog.loading .td-trans-text:empty::after {
+  content: "Переводим…";
+  color: var(--text-faint, var(--text-dim));
+}
+
+.td-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--hairline);
+}
+.td-note { flex: 1; font-size: 11px; color: var(--text-dim); }
+.td-copy {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  background: var(--hover);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.td-copy:hover { background: var(--field); }
+
+@media (max-width: 640px) {
+  .td-body { grid-template-columns: 1fr; }
+  .td-orig { border-right: 0; border-bottom: 1px solid var(--hairline); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .translate-dialog { transition: none; }
+}
+
+/* ---- Узкое окно: капсула уступает место вкладкам ---- */
+@media (max-width: 1120px) {
+  /* Селектор языка — первым вон; заголовок — эллипсис, иначе кнопка
+     «Перевести» подрезалась правым краем капсулы. */
+  .translate-offer .to-lang { display: none; }
+  .translate-offer .to-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    max-width: 150px;
+  }
+}
+
+/* ---- In-place перевод страницы (кнопки диалога) ---- */
+.td-page-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.td-page-actions button {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--field);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease,
+              transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.td-page-actions button:hover { background: var(--hover); color: var(--text); }
+.td-page-actions button:active { transform: scale(0.97); transition-duration: 60ms; }
+.td-page-actions .td-page-replace {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+.td-page-actions .td-page-replace:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+.td-page-actions button[hidden] { display: none; }

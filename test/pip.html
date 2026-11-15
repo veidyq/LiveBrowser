@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>PiP fixture</title></head>
+<body>
+<!-- Фикстура для зонда контекстного меню: страница с видео-элементом, у
+     которого readyState проверяемо > 0.  Видеофайла нет — readyState 0, но
+     атрибут disablePictureInPicture=false даёт детектору «есть кандидат».
+     Меню проверяет именно наличие кандидата, а не готовность потока. -->
+<video id="v" width="320" height="180"></video>
+<p>PiP fixture</p>
+</body>
+</html>

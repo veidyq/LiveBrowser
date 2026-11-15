@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LiveBrowser stress fixture</title>
+<!-- Deliberately heavy page for the SHELLPROBE stress step: no network at
+     all, so the RAM/CPU numbers measure the browser, not the weather on
+     the user's link.
+       - 6000 nodes in the DOM (layout + style cost on every resize)
+       - an interval that rewrites a live number 20x/s (renderer stays awake
+         and keeps burning CPU, which is what hibernation must kill)
+       - a few megapixels of raster (a scroll-sized gradient) so the
+         renderer actually holds pixel memory
+     ?light=1 skips the timer (used if a machine cannot keep 20 of them). -->
+<style>
+  html, body { margin: 0; background: #0d0d10; color: #e8e8ea;
+               font: 14px/1.5 system-ui, sans-serif; }
+  #tall { height: 14000px;
+          background: repeating-linear-gradient(180deg, #13131a 0 40px, #16161f 40px 80px); }
+  .row { height: 22px; display: flex; align-items: center; gap: 8px;
+         padding: 0 12px; border-bottom: 1px solid #1d1d24; font-size: 11px;
+         color: #6b6b78; }
+  .row:nth-child(3n) { color: #8a8a99; }
+  #clock { position: fixed; top: 8px; left: 12px; font-size: 24px;
+           font-variant-numeric: tabular-nums; color: #4f8cff; }
+</style>
+</head>
+<body>
+  <div id="clock">0</div>
+  <div id="tall"></div>
+  <script>
+    (function () {
+      var tall = document.getElementById('tall');
+      var frag = document.createDocumentFragment();
+      // 6000 nodes: enough that Chromium keeps a real layout tree, small
+      // enough that 20 copies stay inside a normal desktop's RAM.
+      for (var i = 0; i < 6000; i++) {
+        var d = document.createElement('div');
+        d.className = 'row';
+        d.textContent = 'row ' + i;
+        frag.appendChild(d);
+      }
+      tall.appendChild(frag);
+
+      var light = /[?&]light=1/.test(location.search);
+      if (light) return;
+      var n = 0, out = document.getElementById('clock');
+      // 20 Hz: a throttled background renderer still wakes for this, so a
+      // hibernated tab is visible as a drop in CPU time rather than a guess.
+      setInterval(function () { out.textContent = ++n; }, 50);
+    })();
+  </script>
+</body>
+</html>

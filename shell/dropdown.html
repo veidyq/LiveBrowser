@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <title>LiveBrowser — панель</title>
+  <link rel="stylesheet" href="app.css">
+  <!-- Стили пунктов generic-меню (.lb-menu-item / .lb-menu-sep) — как в шелле. -->
+  <link rel="stylesheet" href="menu.css">
+  <style>
+    /* Native dropdown layer (host panelView).  The host sizes this view
+       exactly to the panel's rect, so the page paints only the rounded
+       card; the opaque native background (dark/light, same as the sites)
+       fills the corner notches outside the radius.  Two states live here:
+       suggestion rows and the gear search menu — the same --panel-strong
+       card and token set serve both (data-theme comes with the message). */
+    html, body { height: 100%; }
+    body { background: transparent; overflow: hidden; }
+    /* app.css красит html в --bg-a (непрозрачный) — для этого вьюха должна
+       быть прозрачной целиком: чёрная канва просвечивала в углах карточки
+       и любых «щелях» (те самые чёрные полосы/уголочки). */
+    html { background: transparent; }
+    /* ---- Вход панели и каскад пунктов (guide "menu": ≤150мс, только
+       opacity+translate).  dd-in на карточку ставит dropdown.js на первый
+       рендер после показа слоя; dd-new — ступенька пункта меню. ---- */
+    @keyframes dd-panel-in {
+      from { opacity: 0; transform: translateY(-6px) scale(0.985); }
+    }
+    .dd-list.dd-in {
+      animation: dd-panel-in .16s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-origin: top right;
+      will-change: transform, opacity;
+    }
+    @keyframes dd-item-in {
+      from { opacity: 0; transform: translateY(7px); }
+    }
+    .dd-list .dd-new {
+      animation: dd-item-in .2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      animation-delay: var(--dd-i, 0ms);
+      will-change: transform, opacity;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .dd-list.dd-in, .dd-list .dd-new { animation: none !important; }
+    }
+    .dd-list {
+      position: fixed;
+      inset: 0;
+      overflow-y: auto;
+      /* overflow-x:hidden: hover-сдвиг пункта вправо (translate 2px в
+         menu.css) не должен ронять горизонтальный скроллбар панели. */
+      overflow-x: hidden;
+      padding: 8px;
+      border-radius: 12px;
+      background: var(--panel-strong);
+      border: 1px solid var(--hairline);
+      box-shadow: var(--shadow-2);
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-strong) transparent;
+    }
+    .dd-list:empty { visibility: hidden; }
+    .dd-list .suggest { border-radius: 12px; }
+    .dd-list .suggest:hover .go { opacity: 1; }
+    /* The search-menu variant: a column of swatches, mode tabs and the
+       all-settings row; the shared .sm-* rules live in app.css. */
+    .dd-list .dd-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 4px;
+    }
+    /* Generic-меню: длинные заголовки (недавно закрытые) не переносятся —
+       обрезаются многоточием, как в нативных меню. */
+    .dd-list .lb-menu-item {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+  <div class="dd-list" id="dd-list" role="listbox" aria-label="Подсказки поиска"></div>
+  <script src="dropdown.js"></script>
+</body>
+</html>
+

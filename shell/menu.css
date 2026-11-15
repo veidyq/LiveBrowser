@@ -1,0 +1,103 @@
+/* Меню оболочки и микро-жесты (menu.js).
+   Только токены app.css: --panel-strong, --hairline, --shadow-2 — поэтому
+   тёмная, светлая и cyberpunk-темы перекрашивают меню сами. */
+
+/* ---- Контекстное меню ---- */
+.lb-menu {
+  position: fixed;
+  /* Выше баров, тостов (80) и страниц (75); лист палитры — 200 и
+     перекрывает меню (при Ctrl+K оно просто закрывается по клику). */
+  z-index: 95;
+  min-width: 190px;
+  max-width: 280px;
+  padding: 4px;
+  border-radius: var(--radius-lg);
+  background: var(--panel-strong);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-2), 0 0 0 1px var(--border) inset;
+  color: var(--text);
+  font-size: 13px;
+  user-select: none;
+  /* Нативный вид: лёгкий «подъём» при показе, без сдвига геометрии. */
+  transform-origin: var(--lb-menu-origin, top left);
+}
+.lb-menu[hidden] { display: none; }
+.lb-menu.show { animation: lb-menu-in 0.12s var(--ease-spring, ease-out); }
+@keyframes lb-menu-in {
+  from { opacity: 0; transform: scale(0.97); }
+}
+
+.lb-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  /* Подсветка — мгновенная (45 мс, linear): это «указатель под курсором»,
+     а не декорация.  Ease 120 мс читался как отстающий белые бегунок.
+     translate — пружинный сдвиг вправо при наведении (спецификация движения).
+     transform/scale .32s обязаны быть в списке: .lb-menu-item ловит .is-pressed
+     от feel.js (сжатие мгновенное, transition:none), и без этих каналов
+     отпускание «отпрыгивало» бы рывком вместо пружины app.css. */
+  transition: background-color 0.045s linear, color 0.045s linear,
+              translate 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+              scale 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.lb-menu-item:hover,
+.lb-menu-item:focus-visible {
+  background: var(--hover-strong);
+  outline: none;
+}
+/* Пункт при наведении плавно уезжает вправо (независимое translate —
+   transform занят нажимом feel.js). */
+.lb-menu-item:hover { translate: 2px 0; }
+/* Тактильный нажим пункта — лёгкий, без пересогласования layout. */
+.lb-menu-item:active { background: var(--tab-active); transform: scale(0.985); translate: 1px 0; }
+.lb-menu-item[disabled] {
+  color: var(--text-faint);
+  opacity: 0.55;
+  cursor: default;
+}
+.lb-menu-item.lb-danger { color: var(--danger-text); }
+.lb-menu-item.lb-danger:hover,
+.lb-menu-item.lb-danger:focus-visible {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+.lb-menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--hairline);
+}
+
+/* ---- Жесты полосы ---- */
+
+/* Перетаскиваемая вкладка: призрак в полосе гаснет, чтобы цель была видна.
+   Нажатие (.is-pressed) рисует feel.js — здесь только перенос. */
+.tab.lb-dragging { opacity: 0.55; }
+
+/* Приём ссылки в полосе: акцентная «рамка», пока перенос висит над ней. */
+.chrome-bar.lb-drop-ok {
+  box-shadow: var(--glass-spec), 0 4px 24px rgba(0,0,0,0.30),
+              inset 0 0 0 2px var(--accent);
+}
+
+/* ---- Меньше движения: без анимации появления меню и без сдвига строк ---- */
+@media (prefers-reduced-motion: reduce) {
+  .lb-menu.show { animation: none; }
+  /* Декоративный сдвиг вправо при наведении убираем, подсветка остаётся. */
+  .lb-menu-item { translate: none; }
+}
+body.no-anim .lb-menu.show { animation: none; }
+body.no-anim .lb-menu-item { translate: none; }

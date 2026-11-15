@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>adblock fixture</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; }
+  #status { margin-top: 16px; white-space: pre-wrap; font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<h1>Ad-block fixture</h1>
+<p id="intro">This page asks a known ad host for an image and a script.</p>
+<img id="ad" src="http://doubleclick.net/adpx.gif" alt="" width="1" height="1">
+<script src="http://www.googletagmanager.com/gtag.js"></script>
+<div id="status">waiting</div>
+<script>
+  // Report what actually happened to the two requests above.  Both must fail
+  // when the blocklist works: the image never fires load, the script never
+  // defines dataLayer.  The host uses this to tell a real block from a page
+  // that simply did not run its script.
+  (function () {
+    var img = document.getElementById('ad');
+    var probe = { rich: true, keys: [], ok: 0, ui: 0, ticks: 0 };
+    var done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      probe.imgFailed = !img.complete || img.naturalWidth === 0;
+      probe.gtmAbsent = typeof window.dataLayer === 'undefined';
+      probe.foreign = typeof window.__gtag === 'undefined';
+      probe.ticks = window.__probeTicks || 0;
+      document.getElementById('status').textContent = JSON.stringify(probe);
+      window.__adprobe = probe;
+    }
+    img.addEventListener('error', finish);
+    if (typeof window.dataLayer !== 'undefined') finish();
+    // A blocked request fails fast; give a real network a moment, then report.
+    setTimeout(finish, 1200);
+  })();
+</script>
+</body>
+</html>

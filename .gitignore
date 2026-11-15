@@ -1,0 +1,36 @@
+# Сборка: SDK, промежуточные выходы и готовый дистрибутив в git не идут.
+build/
+dist/
+host/bin/
+host/obj/
+installer/*.exe
+*.pdb
+*.log
+
+# Состояние браузера.  Здесь cookies, история и сохранённые входы — в
+# публичном репозитории им не место.
+profile/
+settings.json
+theme.json
+session.json
+window.json
+downloads.json
+history.jsonl
+dist/*.json
+dist/*.jsonl
+dist/crashpad*/
+dist/_sc/
+dist/_heavy/
+dist/_ads/
+dist/adblock-cache.txt
+dist/crash.flag
+
+# Мелочи окружения.
+node_modules/
+tools/node_modules/
+__pycache__/
+*.pyc
+*.user
+.DS_Store
+Thumbs.db
+nul

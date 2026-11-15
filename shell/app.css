@@ -1,0 +1,3283 @@
+﻿:root {
+  /* Default palette — overridden at runtime by app.js from theme.json.
+     Default accent: Linear-type indigo (palette "aurora" keeps its own values
+     once LiveTheme applies them). */
+  --accent: #5e6ad2;
+  --accent-soft: #8a93e8;
+  --bg-a: #08090b;
+  --bg-b: #0f1118;
+  --text: #e8e9ec;
+  --text-dim: #9ea1a8;                        /* secondary */
+  --text-faint: #7a7e86;                      /* tertiary (WCAG AA на #08090B) */
+
+  /* Radii: panels 14 / menus 12 / buttons+inputs 8 / capsules 999. */
+  --radius-xl: 14px;
+  --radius-lg: 12px;
+  --radius-md: 8px;
+
+  /* Motion: interactive = soft spring 0.18–0.22s; fades stay 0.15s ease. */
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.3, 1.15);
+
+  /* Surfaces.  Everything is a variable, so [data-theme="light"] can restyle
+     the same markup without touching layout. */
+  --glass-bg: rgba(255, 255, 255, 0.055);     /* glass panels (blur 24px sat 150%) */
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-spec: inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(255,255,255,0.05), inset 0 0 24px rgba(255,255,255,0.05);
+  --hero-bg: rgba(255, 255, 255, 0.045);      /* .hero sits a notch deeper */
+  --panel: rgba(16, 17, 20, 0.92);            /* .bubble, .jump-label */
+  --panel-strong: #101114;                    /* opaque menus/dialogs */
+  --bar-bg: rgba(10, 11, 13, 0.86);           /* near-opaque command bar */
+  --bar-rim: rgba(255, 255, 255, 0.08);       /* lit top hairline of the bar */
+  --bar-edge: rgba(255, 255, 255, 0.06);      /* bar bottom border */
+  --field: rgba(255, 255, 255, 0.05);
+  --field-hover: rgba(255, 255, 255, 0.10);
+  --hover: rgba(255, 255, 255, 0.06);         /* flat-row hover */
+  --hover-strong: rgba(255, 255, 255, 0.10);
+  --field-border: rgba(255, 255, 255, 0.09);  /* omnibox/address capsules */
+  --tab-active: rgba(255, 255, 255, 0.09);
+  --card-bg: rgba(255, 255, 255, 0.04);       /* settings section cards */
+  --tile-bg: rgba(255, 255, 255, 0.09);       /* .link-tile (плотнее: блюра больше нет) */
+  --tile-bg-hover: rgba(255, 255, 255, 0.13);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --hairline: rgba(255, 255, 255, 0.05);
+  /* Тени многослойные, как у «дорогих» поверхностей: контактная кромка +
+     амбиент + дальний рассеянный.  Меняется на светлое в light-теме ниже;
+     кибер-кожа задаёт свои.  Тени НЕ транзишенятся — запекаются в ::after
+     и проявляются opacity (см. .link-tile::after, .tab-drag-src::after). */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.22);
+  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 32px rgba(0, 0, 0, 0.32), 0 24px 64px rgba(0, 0, 0, 0.22);
+  --shadow-bar: 0 4px 24px rgba(0, 0, 0, 0.30);
+  --shadow-accent: 0 4px 16px color-mix(in srgb, var(--accent) 32%, transparent);
+  --badge-ring: var(--bar-bg, #1b1b24);
+  --clock-glow: 0 6px 40px rgba(0, 0, 0, 0.35);
+  --scrim: rgba(0, 0, 0, 0.45);
+  --ripple-glow: 0 0 90px rgba(0, 0, 0, 0.55);
+  --emph: #fff;                               /* matched prefix in suggestions */
+  --on-accent: #fff;
+  --danger-soft: rgba(233, 156, 168, 0.15);   /* Raycast destructive */
+  --danger-text: #f2b6bf;
+  --danger: #e99ca8;
+  --on-danger: #201317;
+  --focus-ring: var(--accent-soft);
+  --win-close-hover: #e99ca8;
+  --swatch-ring: rgba(8, 9, 11, 0.9);
+
+  /* Geometry shared with the host (MainForm.BarHeight is 56 * dpi/96). */
+  --bar-h: 56px;
+  --win-radius: 12px;
+
+  /* Native widgets (scrollbars, <select> popups, selection) follow the theme. */
+  color-scheme: dark;
+}
+
+/* Light theme: the host flips `data-theme` on <html> from the saved theme.
+   Base #F5F6F8, white 0.82 panels, dark hairlines. */
+[data-theme="light"] {
+  --accent-soft: #8a93e8;
+  --bg-a: #f5f6f8;
+  --bg-b: #eceef4;
+  --text: #17181c;
+  --text-dim: #62656c;
+  --text-faint: #6a6e76;
+
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-spec: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(255,255,255,0.25), inset 0 0 24px rgba(255,255,255,0.35);
+  --hero-bg: rgba(255, 255, 255, 0.78);
+  --panel: rgba(255, 255, 255, 0.92);
+  --panel-strong: #ffffff;
+  --bar-bg: rgba(255, 255, 255, 0.86);
+  --bar-rim: rgba(10, 12, 16, 0.08);
+  --bar-edge: rgba(10, 12, 16, 0.08);
+  --field: rgba(10, 12, 16, 0.05);
+  --field-hover: rgba(10, 12, 16, 0.08);
+  --hover: rgba(0, 0, 0, 0.04);
+  --hover-strong: rgba(0, 0, 0, 0.08);
+  --field-border: rgba(10, 12, 16, 0.12);
+  --tab-active: rgba(10, 12, 16, 0.07);
+  --card-bg: rgba(10, 12, 16, 0.03);
+  --tile-bg: rgba(255, 255, 255, 0.82);
+  --tile-bg-hover: rgba(255, 255, 255, 0.95);
+  --border: rgba(10, 12, 16, 0.08);
+  --border-strong: rgba(10, 12, 16, 0.14);
+  --hairline: rgba(10, 12, 16, 0.05);
+  --shadow-1: 0 1px 2px rgba(16, 18, 24, 0.08), 0 2px 8px rgba(16, 18, 24, 0.06);
+  --shadow-2: 0 1px 2px rgba(16, 18, 24, 0.08), 0 8px 32px rgba(16, 18, 24, 0.12), 0 24px 64px rgba(16, 18, 24, 0.08);
+  --shadow-bar: 0 4px 24px rgba(16, 18, 24, 0.16);
+  --clock-glow: 0 6px 30px rgba(16, 18, 24, 0.10);
+  --scrim: rgba(16, 18, 24, 0.28);
+  --ripple-glow: 0 0 70px rgba(16, 18, 24, 0.18);
+  --emph: #17181c;
+  --on-accent: #fff;
+  --danger-soft: rgba(194, 94, 110, 0.12);
+  --danger-text: #a84a5a;
+  --danger: #c25e6e;
+  --on-danger: #fff;
+  --focus-ring: #4c5ac0; /* #8a93e8 давал 2.62:1 на #F5F6F8 < 3.0 (P2-4) */
+  --win-close-hover: #c25e6e;
+  --swatch-ring: rgba(255, 255, 255, 0.95);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: "Inter", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  /* Фон десктопа живёт в ::before (слой ниже авроры): его можно ГАСИТЬ
+     opacity'ей — на этом стоит крест-фейд «рабочий стол → сайт». */
+  background: none;
+  overflow: hidden;
+  user-select: none;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 0%, var(--bg-b), var(--bg-a) 70%);
+  transition: opacity 0.15s ease;
+}
+
+/* On a site the ui view stretches over the whole window while the suggest
+   panel is open; a transparent body lets the site show through everywhere
+   except the bar and the panel itself (the host sizes/positions the views).
+   Крест-фейд: фон/аврора/контент десктопа гаснут .15s ПОверх уже
+   показанного сайта — хост держит ui-вьюху во всё окно 190мс. */
+body.site-active {
+  background: transparent;
+}
+/* Канва тоже гаснет: html красит её --bg-a, и при крест-фейде (ui-вьюха
+   на время фейда во всё окно) сайт под десктопом был бы скрыт непрозрачной
+   канвой.  Класс ставит tabs.js (syncStage) вместе с body.site-active. */
+html.site-active { background: transparent; }
+body.site-active::before { opacity: 0; }
+.aurora, .stage { transition: opacity 0.24s ease; }
+body.site-active .aurora,
+body.site-active .stage { opacity: 0; pointer-events: none; }
+
+/* will-change на плитках — ТОЛЬКО на время наклона (правило «не жри
+   память»): класс body.tilting больше не ставится — плитки статичны. */
+
+/* Уход с десктопа (новая вкладка — вьюха ещё не готова, шторки нет):
+   контент не просто гаснет, а слегка уплывает вверх — переход читается. */
+@keyframes stage-exit {
+  to { opacity: 0; transform: translateY(-10px) scale(0.99); }
+}
+body.stage-leaving .stage { animation: stage-exit 0.24s ease-in both; }
+
+/* Возврат на десктоп: контент поднимается из лёгкого сдвига. */
+@keyframes stage-enter {
+  from { opacity: 0; transform: translateY(8px); }
+}
+body.stage-entering .stage {
+  animation: stage-enter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before, .aurora, .stage { transition: none !important; }
+  body.stage-entering .stage, body.stage-leaving .stage { animation: none; }
+}
+
+/* ---- Animated aurora backdrop (gives the glass something to blur) ---- */
+.aurora {
+  position: fixed;
+  inset: -20%;
+  filter: blur(60px) saturate(140%);
+  z-index: 0;
+  pointer-events: none;
+}
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.4;
+  /* Time of day / weather knobs (see "Living desktop" below).  The defaults
+     live HERE, on the element that paints, and the body[data-*] rules reach
+     them through .aurora — an inherited custom property is read from the
+     blob's own computed chain, which is what filter sees. */
+  --sky-dim: 1;
+  --sky-sat: 1;
+  filter: saturate(var(--sky-sat)) brightness(var(--sky-dim));
+  transition: background 0.6s ease;
+}
+.blob-a {
+  width: 46vmax; height: 46vmax; left: 8%; top: 6%;
+  background: var(--accent);
+  /* Feature 17: курсор — единственный источник движения.  Ключевые кадры
+     остались включёнными (frozen), но play-state: paused, поэтому в покое
+     композитор НЕ тикает их: ни одного кадра, ни одного пересчёта blur.
+     wallpaper.js снимает паузу только пока курсор реально движется. */
+  animation: drift-a 26s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.blob-b {
+  width: 38vmax; height: 38vmax; right: 4%; top: 30%;
+  background: var(--accent-soft);
+  animation: drift-b 31s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.blob-c {
+  width: 34vmax; height: 34vmax; left: 35%; bottom: -10%;
+  background: color-mix(in srgb, var(--accent) 60%, #00e0c0);
+  animation: drift-c 24s ease-in-out infinite;
+  animation-play-state: paused;
+}
+/* Cursor-driven: wake the drift while the pointer is inside and awake;
+   sleep it again (from the exact same frame) once it settles. */
+body.wall-live .blob { animation-play-state: running; }
+@keyframes drift-a { 50% { transform: translate3d(10vw, 8vh, 0) scale(1.15); } }
+@keyframes drift-b { 50% { transform: translate3d(-9vw, -6vh, 0) scale(0.9); } }
+@keyframes drift-c { 50% { transform: translate3d(6vw, -10vh, 0) scale(1.1); } }
+
+/* ---- Living wallpaper: the desk answers the pointer ------------------ */
+/* Two layers, both compositor-only: wallpaper.js nudges .aurora a few
+   pixels against the cursor (parallax — the desk has depth) and drags a
+   soft accent glow along with it.  Nothing repaints: only `transform` and
+   `opacity` change, and the loop parks itself (style reset) once the
+   pointer leaves, so an idle desktop costs exactly what it did before. */
+.wall-glow {
+  position: fixed;
+  left: 0; top: 0;
+  width: 620px; height: 620px;
+  margin: -310px 0 0 -310px;      /* translate() positions the CENTRE */
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transform: translate3d(-999px, -999px, 0);
+  /* Two stops so the halo fades instead of ending in a visible circle.  The
+     colours are knobs: a light desk needs a denser tint to read at all (a
+     translucent colour can only darken near-white), and Night City gets its
+     own yellow-to-cyan neon. */
+  --glow-core: color-mix(in srgb, var(--accent) 34%, transparent);
+  --glow-edge: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: radial-gradient(circle closest-side,
+      var(--glow-core),
+      var(--glow-edge) 46%,
+      transparent 72%);
+  transition: opacity 0.45s ease;
+  will-change: transform, opacity;
+}
+[data-theme="light"] .wall-glow {
+  --glow-core: color-mix(in srgb, var(--accent) 30%, transparent);
+  --glow-edge: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+html[data-theme="cyberpunk"] .wall-glow {
+  --glow-core: color-mix(in srgb, var(--accent-yellow) 20%, transparent);
+  --glow-edge: color-mix(in srgb, var(--accent-cyan) 12%, transparent);
+}
+.aurora { will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .wall-glow { display: none; }
+}
+
+/* ---- Living desktop: time of day + weather ------------------------- */
+/* The background is already the three blobs above; nothing new is added to
+   the scene.  The hour repoaints those same three (warm gold at dawn, cool
+   blue at night) and the current weather pulls their saturation and
+   brightness down, so an overcast or rainy day reads as a greyer desktop.
+   Both are custom-property swaps on a 1.2s transition — compositor-only,
+   and the drift keyframes keep running untouched underneath. */
+/* Hours 5-9: a low warm sun on the horizon. */
+body[data-phase="dawn"] .blob { --sky-dim: 0.92; }
+body[data-phase="dawn"] .blob-a { background: color-mix(in srgb, var(--accent) 45%, #ffb066); }
+body[data-phase="dusk"] .blob { --sky-dim: 0.9; }
+body[data-phase="dusk"] .blob-a { background: color-mix(in srgb, var(--accent) 45%, #ff8a5c); }
+/* Night: deep and desaturated, the blobs sink into the dark. */
+body[data-phase="night"] .blob { --sky-dim: 0.62; --sky-sat: 0.72; }
+body[data-phase="night"] .blob-a { background: color-mix(in srgb, var(--accent) 55%, #1b2a6b); }
+body[data-phase="night"] .blob-c { background: color-mix(in srgb, var(--accent) 40%, #0b1a3a); }
+/* Weather: cloud cover greys the aurora out by degrees.  Later rules win, so
+   this block sits after the phase rules on purpose. */
+body[data-sky="cloudy"] .blob { --sky-dim: 0.86; --sky-sat: 0.8; }
+body[data-sky="overcast"] .blob { --sky-dim: 0.72; --sky-sat: 0.52; }
+body[data-sky="rain"] .blob { --sky-dim: 0.66; --sky-sat: 0.42; }
+body[data-sky="snow"] .blob { --sky-dim: 0.95; --sky-sat: 0.28; }
+/* Night + rain must not stack into a black screen. */
+body[data-phase="night"][data-sky="rain"] .blob { --sky-dim: 0.55; }
+@media (prefers-reduced-motion: reduce) {
+  .blob { transition: none !important; }
+}
+
+/* Окно свёрнуто/скрыто (хост шлёт {type:'occ',on}): заморозить всё, что
+   перерисовывает экран — иначе GPU-process жжёт ~45% ядра в «покое». */
+body.occ .blob { animation-play-state: paused; }
+/* Окно не в фокусе / вкладка в фоне: та же полная остановка. */
+body.wall-idle .blob { animation-play-state: paused; }
+
+/* ---- Layout ---- */
+/* Упрощённый режим (без GPU): убираем дорогие blur у стекла, туман авроры
+   и акцентное свечение — визуал остаётся чистым, но перерисовка дешёвая. */
+html.no-gpu .glass,
+html.no-gpu .hero,
+html.no-gpu .search-menu,
+html.no-gpu .palette-panel {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.no-gpu .aurora { filter: none; opacity: .8; }
+html.no-gpu .wall-glow { display: none; }
+html.no-gpu .blob { animation: none !important; }
+
+/* «Стеклянный фон» выключен (тумблер Оптимизация): blur(36px) — самая
+   дорогая часть перерисовки — снимается, а карточки получают чуть более
+   плотную заливку, чтобы не выглядели мутными без размытия. */
+body.no-blur .glass,
+body.no-blur .hero,
+body.no-blur .chrome-bar::before {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+body.no-blur .glass { background: var(--glass-bg); }
+
+/* Живой отклик на новую вкладку: сцена мягко «вдыхает» один раз, когда
+   появляется новая карточка (класс ставит feel.js через body.new-tab).
+   Один цикл, compositor-only, и под ноль под no-anim/occ.  Двигаем по Y,
+   а не scale: дробный масштаб на тексте мылит его на GPU. */
+@keyframes stage-breathe {
+  0% { transform: translateY(0); }
+  35% { transform: translateY(-1px); }
+  100% { transform: translateY(0); }
+}
+body.new-tab .stage { animation: stage-breathe .42s var(--ease-spring, ease-out) both; }
+body.occ .stage, body.no-anim .stage { animation: none !important; }
+
+.stage { perspective: 900px; }
+/* БЕЗ preserve-3d на .hero: он раскладывал детей карточки (часы, дату,
+   погоду) на отдельные 3D-плоскости, и Chromium перепроецировал каждый
+   текстовый блок каждый кадр — шрифт дрожал при движении курсора.
+   Плоский rotateX/Y на промотированном слое = плавное честное 3D без
+   перерисовки текста.  will-change: transform живёт на .hero постоянно —
+   это единственный слой, анимируемый при каждом движении мыши. */
+.hero { will-change: transform; }
+.stage {
+  position: relative;
+  z-index: 1;
+  height: calc(100vh - var(--bar-h));
+  margin-top: var(--bar-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* `safe`: never clip the top of the hero in a short window.  The plain
+     `center` first is the fallback for engines without `safe`. */
+  justify-content: center;
+  justify-content: safe center;
+  gap: clamp(16px, 3vh, 24px);
+  /* The bar is the title bar: centre the desktop in the area below it. */
+  padding: clamp(16px, 5vh, 48px) 24px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.stage::-webkit-scrollbar { display: none; }
+
+@media (max-height: 700px) {
+  .clock { font-size: clamp(48px, 11vh, 96px); }
+  .hero { padding: 20px 44px 16px; }
+}
+.stage[hidden] { display: none; }
+.aurora[hidden] { display: none; }
+
+/* ---- Frosted glass cards ---- */
+.glass {
+  background:
+    linear-gradient(120deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.07)),
+    var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(36px) saturate(180%);
+  -webkit-backdrop-filter: blur(36px) saturate(180%);
+  box-shadow: var(--shadow-2), var(--glass-spec);
+  transition: border-radius 0.22s var(--ease-spring), background 0.3s ease;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 44px 72px 40px;
+  min-width: min(380px, 100%);
+  background: var(--hero-bg);
+}
+
+.clock {
+  font-size: clamp(64px, 12vw, 132px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--clock-glow);
+}
+.date { margin-top: 8px; font-size: 13px; color: var(--text-dim); }
+
+.weather {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  /* Материал hero: стекло со спекуляром, а не плоская заливка — карточка
+     погоды читается тем же слоем, что и часы над ней. */
+  background: var(--hero-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-1), var(--glass-spec);
+  /* Тень не транзишенится (правило «repaint всей тени»): движение несёт
+     translate, глубина меняется свопом токена. */
+  transition: translate 0.2s var(--ease-spring);
+}
+.weather:hover {
+  translate: 0 -1px;
+  box-shadow: var(--shadow-2), var(--glass-spec);
+  cursor: pointer;
+}
+.weather-icon { font-size: 20px; }
+.weather-temp { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.weather-desc { font-size: 12px; color: var(--text-dim); }
+
+/* ---- Search / omnibox ---- */
+.omnibox {
+  position: relative;
+  width: min(680px, 86vw);
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border-color: var(--field-border);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.omnibox:focus-within .search {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: var(--shadow-2),
+              0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  padding: 12px 8px;
+}
+.search-input::placeholder { color: var(--text-faint); }
+
+/* Engine badge — the search provider the query will go to. */
+.engine-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--field);
+}
+.engine-dot {
+  display: grid;
+  place-items: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(140deg, #fc3f1d, #ff7a45);
+  /* Объём значка: контактная тень + верхний спекуляр — не плоский кружок. */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ---- Yandex suggestions ---- */
+.suggests {
+  position: absolute !important;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 15;
+  /* Not vh: the ui view can be clipped to the bar while a site is active,
+     and vh units would collapse this panel to a sliver. */
+  max-height: 440px;
+  overflow-y: auto;
+  padding: 8px;
+  border-radius: var(--radius-lg);
+  background: var(--panel-strong) !important;
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-2) !important;
+  transform-origin: top center;
+  animation: suggests-in 0.2s var(--ease-spring);
+}
+.suggests[hidden] { display: none; }
+@keyframes suggests-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+.suggest {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  /* Hover-подсветка быстрая (60 мс linear): строка под курсором — указатель.
+     translate — мягкий сдвиг строки к курсору (паттерн menu.css): список
+     «дышит» под рукой.  Канал translate свободен (squish живёт в transform). */
+  transition: background-color 0.06s linear, translate 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.suggest:hover { background: var(--hover); translate: 2px 0; }
+.suggest.active { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.suggest.active { box-shadow: inset 2px 0 0 var(--accent); }
+.suggest-icon {
+  flex: 0 0 auto;
+  width: 18px; height: 18px;
+  display: grid; place-items: center;
+  color: var(--text-dim);
+}
+.suggest-icon svg {
+  width: 16px; height: 16px;
+  fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.suggest .suggest-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+.suggest-text b { font-weight: 600; color: var(--emph); }
+/* ---- Квик-ответы омнибокса («погода», «курс доллара», «12*3») ----
+   Первая строка панели — карточка-ответ, а не ссылка: слева иконка,
+   крупное значение, справа пояснение и переход.  Клик ведёт на источник
+   (Яндекс.Погода, ЦБ РФ) или, для калькулятора, копирует результат в
+   омнибокс.  Над сайтом слой нативный — стиль одинаков в обоих каналах. */
+.suggest.quick-row {
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.suggest.quick-row:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); translate: 0; }
+.suggest.quick-row .suggest-icon {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--emph);
+  font-size: 15px;
+}
+.suggest.quick-row .quick-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  overflow: hidden;
+}
+.suggest.quick-row .quick-value {
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+.suggest.quick-row .quick-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.suggest.quick-row .quick-note {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+/* Both parts share the `.suggest` prefix, so these selectors outrank
+   `.suggest-text` and can't be overridden by rule order. */
+.suggest.go {
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
+  color: var(--text-dim); /* P2-8: faint не держал контраст */
+  font-size: 11px;
+  transition: opacity 0.15s ease;
+}
+/* Строка открытой вкладки: favicon вместо лупы + подпись «Вкладка». */
+.suggest-fav { display: flex; align-items: center; justify-content: center; }
+.suggest-fav img {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+.suggest-tab-hint {
+  color: var(--text-faint);
+  padding: 2px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  line-height: 1.4;
+}
+
+/* Hover/press feedback on a row (active state is toggled by JS). */
+.suggest:active { transform: scale(0.985); }
+
+/* ---- Search menu (gear button popover) ---- */
+/* Palettes + dark/light + "all settings" under the omnibox capsule.  The
+   same card recipe as .suggests; the inner .sm-* classes are shared with
+   the native panel layer (dropdown.html links this stylesheet too). */
+.search-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  z-index: 16;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--panel-strong) !important;
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-2) !important;
+  transform-origin: top right;
+  animation: suggests-in 0.2s var(--ease-spring);
+}
+.search-menu[hidden] { display: none; }
+/* Same drop-below-the-bar geometry the suggestion panel uses. */
+.chrome-bar .bar-omni .search-menu { top: calc(var(--bar-h) - 8px); }
+
+.sm-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px;
+}
+.sm-swatch {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 transparent;
+  transition: transform 0.18s var(--ease-spring), box-shadow 0.18s ease;
+}
+.sm-swatch:hover { transform: scale(1.15); }
+.sm-swatch.active {
+  /* Ring marks the current palette (same recipe as the big .swatch). */
+  box-shadow: 0 0 0 2px var(--swatch-ring), 0 0 0 4px var(--accent);
+}
+
+/* Dark / light tab switch. */
+.sm-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--field);
+  border: 1px solid var(--hairline);
+}
+.sm-tab {
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.sm-tab:hover { color: var(--text); }
+.sm-tab.active {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text);
+}
+
+.sm-sep { height: 1px; background: var(--hairline); }
+
+.sm-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.05s linear; /* указатель под курсором — мгновенно */
+}
+.sm-row:hover { background: var(--hover); }
+.sm-row svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- Icon buttons with press-scale ---- */
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px; height: 44px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text);
+  background: var(--field);
+  transition: background 0.12s ease, transform 0.18s var(--ease-spring);
+}
+.icon-btn svg {
+  width: 20px; height: 20px;
+  fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.icon-btn:hover { background: var(--field-hover); }
+.icon-btn:active { transform: scale(0.94); }
+
+/* ---- Quick links ---- */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  max-width: min(760px, 90vw);
+  /* Общая перспектива: все плитки наклоняются к одному vanishing point */
+  perspective: 900px;
+}
+.link-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--text);
+  font-size: 13px;
+  background: var(--tile-bg);
+  border: 1px solid var(--glass-border);
+  /* БЕЗ backdrop-filter: фон за плитками меняется (wall-glow, обои), блюр
+     пересчитывался бы каждый кадр и текст в стеклянных плитках мерцал бы.
+     Плотная заливка держит текст кристально чётким. */
+  /* Наклона и слежения за курсором нет (решение пользователя): transform на
+     плитке не задаётся вовсе — подъём живёт в свойстве translate, нажим в
+     scale, вход в keyframes.  Каналы композируются, пустой transform не
+     тратит кадр на пересчёт. */
+  /* Спокойный отклик: подъём -2px + фон, каналы прежние. */
+  transition: scale 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+              translate 0.2s var(--ease-spring),
+              background-color 0.15s ease, color 0.15s ease,
+              border-color 0.15s ease, opacity 0.15s ease;
+}
+/* Hover/press ТОЛЬКО на translate/scale: дробный scale (1.02) на элементе с
+   backdrop-filter мылит шрифт на GPU и рождает обрез глифов по верхней
+   кромке слоя при входе курсора сверху.  Подъём + нажим читаются так же
+   тактильно, но остаются пиксель-в-пиксель чёткими. */
+.link-tile:hover {
+  background: var(--tile-bg-hover);
+  translate: 0 -2px;
+  /* Акцентная кромка: плитка подсвечивается палитрой, глубина ::after
+     (тень) проявляется своим transition ниже. */
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-border));
+}
+.link-tile:active { translate: 0 0; }
+.link-dot {
+  width: 26px; height: 26px;
+  border-radius: var(--radius-md);
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 600;
+  color: #fff;
+}
+/* Реальный favicon плитки (buildLinkTile): заполняет круглую точку,
+   прозрачный фон точки не красит иконку-подложку сайта. */
+.link-dot .link-dot-img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- Command surface: the window's title bar ---- */
+/* The host window is frameless and rounded by DWM, so the page's top corners
+   are rounded too and the bar reads as one glass sheet with the content. */
+html, body { background: var(--bg-a); }
+body {
+  border-radius: var(--win-radius);
+  overflow: hidden;
+}
+.chrome-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--bar-h);
+  padding: 0 0 0 var(--bar-pad-l, 8px);
+  /* Верх прямым: скругление здесь оставляло чёрные «уголочки» — за углами
+     просвечивала тёмная подложка вьюхи сайта (ui-вьюха прозрачна). */
+  border-radius: 0;
+  background-color: var(--bar-bg);
+  background-image:
+    radial-gradient(120% 160% at 50% -40%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  box-shadow: var(--glass-spec), var(--shadow-bar);
+  /* No overflow:hidden: the suggestion panel has to drop below the bar. */
+  isolation: isolate;
+}
+/* Оффлайн-индикатор (app.js: online/offline события → body.net-off):
+   тонкая янтарная полоска по нижней кромке бара — заметно, но не кричит.
+   Тень полоски НЕ транзишенится — появление через opacity. */
+.chrome-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #e8a13c;
+  box-shadow: 0 0 8px rgba(232, 161, 60, 0.55);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+body.net-off .chrome-bar::after { opacity: 1; }
+html[data-theme="cyberpunk"] .chrome-bar::after { content: none; }
+/* Hairline highlight along the very top edge: the "lit" rim of the glass. */
+.chrome-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--bar-rim) 18%, var(--bar-rim) 82%, transparent);
+  pointer-events: none;
+}
+
+/* ---- «О браузере» (settings.js) ---- */
+.about-line { font-size: 13px; color: var(--text); line-height: 1.5; }
+.about-line + .about-line { margin-top: 6px; }
+.about-line.about-dim { color: var(--text-dim); font-size: 12.5px; }
+
+/* ---- Permission dialog (perm.js: запросы сайтов) ---- */
+/* Аккуратная карточка вместо системного попапа: top-right под баром, тот же
+   материал, что у findbar.  Вход/выход — transform/opacity. */
+.perm-dialog {
+  position: fixed;
+  top: calc(var(--bar-h) + 6px);
+  right: 12px;
+  z-index: 46; /* над тостами (40-45), ниже диалога перевода (50) */
+  width: min(320px, 86vw);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--panel-strong);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: transform 0.2s cubic-bezier(0.3, 1.1, 0.4, 1), opacity 0.2s ease;
+}
+.perm-dialog.in { opacity: 1; transform: translateY(0); }
+.perm-dialog.out { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+.perm-dialog .perm-row { display: flex; align-items: flex-start; gap: 10px; }
+.perm-dialog .perm-icon {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+}
+.perm-dialog .perm-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.perm-dialog .perm-text { font-size: 13px; color: var(--text); line-height: 1.45; }
+.perm-dialog .perm-text b { color: var(--text); font-weight: 600; }
+.perm-dialog .perm-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+.perm-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--field);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease,
+              transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.perm-btn:hover { background: var(--hover); color: var(--text); }
+.perm-btn:active { transform: scale(0.95); transition-duration: 60ms; }
+.perm-btn.perm-allow {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+  box-shadow: var(--shadow-accent);
+}
+.perm-btn.perm-allow:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+.perm-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+body.no-anim .perm-dialog { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .perm-dialog { transition: none; }
+}
+
+/* ---- «Восстановить вкладки?» после сбоя (restore.js) ---- */
+/* Карточка по центру над рабочим столом: видна только после аварийного
+   выхода, поэтому и контраст/ширина щедрые.  Вход — opacity+scale (не
+   translate: карточка уже по центру, ехать ей некуда). */
+.restore-dialog {
+  position: fixed;
+  left: 50%;
+  top: 42%;
+  z-index: 48; /* над пермиссиями, ниже диалога перевода */
+  width: min(380px, 90vw);
+  padding: 20px 22px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--panel-strong);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.97);
+  transition: transform 0.22s cubic-bezier(0.3, 1.1, 0.4, 1), opacity 0.18s ease;
+}
+.restore-dialog.in { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.restore-dialog.out { opacity: 0; transform: translate(-50%, -50%) scale(0.98); pointer-events: none; }
+.restore-dialog .restore-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.restore-dialog .restore-text { margin-top: 8px; font-size: 13px; line-height: 1.5; color: var(--text-dim); }
+.restore-dialog .restore-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.restore-btn {
+  padding: 7px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.restore-btn:hover { background: var(--hover); }
+.restore-btn.restore-yes {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+  box-shadow: var(--shadow-accent);
+}
+.restore-btn.restore-yes:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+.restore-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+body.no-anim .restore-dialog { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .restore-dialog { transition: none; }
+}
+
+/* ---- Findbar (Ctrl+F, поиск по странице — findbar.js) ---- */
+/* Панель под правым краем бара: input + бейдж + стрелки.  Вход/выход —
+   transform/opacity, тень статична (правило «тени не транзишенятся»). */
+.findbar {
+  position: fixed;
+  top: calc(var(--bar-h) + 6px);
+  right: 12px;
+  z-index: 42; /* над тостами (45 нет — ниже перевода 50), ниже палитры (85) */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  background: var(--panel-strong);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-2);
+  transform: translateY(0);
+  transition: transform 0.18s cubic-bezier(0.3, 1.1, 0.4, 1), opacity 0.18s ease;
+}
+.findbar[hidden] { display: none; }
+.findbar.out { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+.findbar-input {
+  width: 200px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.findbar-input:focus { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.findbar-count {
+  min-width: 64px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.findbar-count.none { color: var(--text-faint); }
+.findbar-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--field);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease,
+              transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.findbar-btn:hover { background: var(--hover); color: var(--text); }
+.findbar-btn:active { transform: scale(0.9); transition-duration: 60ms; }
+.findbar-close { border-color: transparent; background: transparent; }
+body.no-anim .findbar { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .findbar { transition: none; }
+}
+/* The bar itself is the drag zone (see app.js initTitlebar): this empty
+   element is only a marker of the bar's free space on the far right. */
+.drag-zone { display: none; }
+.chrome-bar > * { position: relative; z-index: 1; }
+
+.chrome-bar .tabs,
+.chrome-bar .bar-actions,
+.chrome-bar .bar-nav,
+.chrome-bar .win-controls { display: flex; align-items: center; }
+.chrome-bar .bar-nav { gap: 2px; flex: 0 0 auto; }
+.chrome-bar .bar-actions { gap: 2px; flex: 0 0 auto; }
+.chrome-bar.mode-omni .tabs,
+.chrome-bar.mode-omni .bar-nav,
+.chrome-bar.mode-omni .bar-actions { display: none; }
+/* While typing, the strip would be crushed to a sliver by the omnibox
+   anyway — hide it entirely; Escape or a click on the strip brings it back. */
+.chrome-bar.mode-omni .tabs { display: none; }
+.chrome-bar.mode-tabs .bar-omni { display: none; }
+.chrome-bar .bar-omni { flex: 1; min-width: 0; display: flex; justify-content: center; }
+/* Typing mode: the strip and the action cluster disappear, but the home tab
+   on the left and the window controls on the right stay.  Centring inside
+   the remaining flex box would push the capsule off the bar's real centre by
+   half their width difference — a visible sideways hop on every focus.
+   The offset goes on the capsule, NOT on the slot: #suggests and
+   .search-menu are left:0/right:0 children of the omnibox, so a translated
+   slot would carry the dropdown panel with it and knock it off-centre. */
+.chrome-bar.mode-omni .bar-omni > .omnibox {
+  /* Measured, not guessed: the flex slot already spans exactly the gap
+     between the two clusters ([156..1133] with home 148 and controls 139),
+     and justify-content:center puts the capsule dead on that slot's centre —
+     which is the bar's centre to within half a pixel.  Adding a
+     (left-right)/2 "correction" on top of it moved the pill 4.5px right and
+     left it there, so the offset is simply not needed.  Kept as a hook (and
+     at 0) so the slot stays the single place that owns this geometry. */
+  --omni-balance: calc(-1 * var(--omni-drift, 0px));
+  translate: var(--omni-balance) 0;
+}
+.chrome-bar .bar-omni .omnibox { width: min(440px, 100%); }
+/* Compact pill: the bar row is 56px — the oval is a slim centred capsule
+   (smaller input, 30px icon buttons), not a blob filling the whole height. */
+.chrome-bar .bar-omni .search { padding: 4px 8px 4px 8px; gap: 8px; }
+.chrome-bar .bar-omni .search-input { font-size: 14px; padding: 8px 2px; }
+.chrome-bar .bar-omni .icon-btn { width: 30px; height: 30px; }
+.chrome-bar .bar-omni .icon-btn svg { width: 16px; height: 16px; }
+.chrome-bar .bar-omni .engine-badge { padding: 2px 8px 2px 4px; }
+.chrome-bar .bar-omni .engine-dot { width: 18px; height: 18px; font-size: 11px; }
+.chrome-bar .bar-omni { align-items: center; }
+/* The pill row starts 8px in from the window edge, while .win-controls runs
+   flush to the right edge.  Centring the slot satisfies the flex row, not the
+   window: the capsule still lands 4px left of the bar's true centre.  The
+   padding is handed to the capsule as a CSS var so balanceOmniSlot() can
+   subtract it on top of the cluster-width difference. */
+.chrome-bar { --bar-pad-l: 8px; }
+/* Omnibox in the bar: a single-line pill, suggestions drop just below it. */
+.chrome-bar .search { background: var(--hover); }
+.chrome-bar .search-input { padding: 8px 8px; font-size: 14px; }
+.chrome-bar .icon-btn { width: 36px; height: 36px; }
+.chrome-bar .icon-btn svg { width: 17px; height: 17px; }
+/* The suggestions hang below the 56px bar, where the host draws the site.  In
+   tabs mode the shell page owns that area on the home tab; on a site tab the
+   host shrinks the active view to a sliver while the panel is open (bridge
+   message "overlay"), so the rows are never cut off by the native view. */
+.chrome-bar .bar-omni .suggests { top: calc(var(--bar-h) - 8px); }
+
+.tabs {
+  position: relative;
+  flex: 1;
+  /* Стрип сжимается МЕДЛЕННЕЕ капсулы перевода (у неё flex-shrink: 3):
+     при нехватке места первой компактится капсула, а стрип держит минимум
+     две вкладки вместо схлопывания в одну пилюлю. */
+  flex-shrink: 2;
+  min-width: 148px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+/* Sliding underline that travels between tabs on switch. */
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 45%, transparent);
+  transform-origin: left center;
+  /* transform-only (запрет layout-анимаций left/width) */
+  transition: transform 0.22s var(--ease-spring), opacity 0.22s var(--ease-spring);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 190px;
+  min-width: 96px;
+  padding: 6px 8px 6px 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.tab:hover { background: var(--hover); color: var(--text); }
+.tab.active { background: var(--tab-active); color: var(--text); }
+.tab-fav {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 18px; height: 18px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--field-hover);
+  /* Спекуляр сверху: заглушка-иконка держит объём, не выглядит стикером. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+/* Домашняя вкладка носит знак приложения (mark.png), а не глиф ⌂: знак
+   подложки того же размера, поэтому плейсхолдер остаётся, но без фона и
+   без спекуляра — круглый диск сам держит форму. */
+.tab-fav-home { color: var(--text); font-size: 12px; background: transparent; box-shadow: none; }
+.tab-fav-home img { display: block; width: 16px; height: 16px; border-radius: 50%; }
+.tab-fav-img {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+/* Loading: a thin ring spins around the favicon slot. */
+.tab.spin .tab-fav::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  border-top-color: var(--accent-soft);
+  border-right-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  animation: tab-spin 0.7s linear infinite;
+}
+@keyframes tab-spin { to { transform: rotate(360deg); } }
+.chrome-bar.is-loading #nav-reload svg { animation: tab-spin 0.9s linear infinite; }
+/* Soft breathing on the icon of the tab that is actually loading.  Opacity
+   only — it rides the same composited layer as the ring, so the two never
+   fight and the strip stays on the transform/opacity budget.  Background
+   tabs do not pulse: their ring already says "working", and a strip full of
+   pulsing icons is noise. */
+.tab.spin.active .tab-fav { animation: fav-breathe 2.4s ease-in-out infinite; }
+@keyframes fav-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.66; }
+}
+/* Frozen with everything else while the window is hidden. */
+body.occ .tab.spin.active .tab-fav { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .tab.spin.active .tab-fav { animation: none; }
+}
+.tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+.tab-close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 20px; height: 20px;
+  margin-left: 2px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+.tab:hover .tab-close { opacity: 1; }
+.tab-close:hover { background: var(--danger-soft); color: var(--danger-text); }
+.tab-close:active { transform: scale(0.85); }
+
+/* Динамик на таблетке: появляется только у звучащей вкладки (см. tabs.js
+   updateTabSound).  Место под него зарезервировано flex-элементом, поэтому
+   заголовок не дёргается в момент, когда вкладка начала играть. */
+.tab-sound {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 18px; height: 18px;
+  margin-left: 2px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+.tab-sound:hover { opacity: 1; background: var(--hover); }
+.tab-sound:active { transform: scale(0.88); }
+.tab-sound[data-state="muted"] { opacity: 0.5; }
+
+.tab-btn {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px; height: 34px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--field);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.18s var(--ease-spring);
+}
+.tab-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.tab-btn:hover { background: var(--field-hover); }
+.tab-btn:active { transform: scale(0.94); }
+.tab-btn:disabled { opacity: 0.32; pointer-events: none; }
+
+/* ---- Keyboard focus ---- */
+.tab-btn:focus-visible, .tab:focus-visible, .win-ctrl:focus-visible,
+.icon-btn:focus-visible, .suggest:focus-visible, .link-tile:focus-visible,
+.addr-copy:focus-visible, .settings-btn:focus-visible, .swatch:focus-visible,
+.dl-act:focus-visible, .bubble-close:focus-visible, .addr-pill:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+/* ---- Window controls (host only; hidden in a plain browser) ---- */
+.win-controls {
+  align-self: stretch;
+  margin-left: auto;
+  border-left: 1px solid var(--hairline);
+}
+.win-ctrl {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  width: 46px;
+  height: auto;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: default;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.win-ctrl svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* The buttons are edge-to-edge, so the press dips the glyph instead of
+     scaling the whole control away from the window frame. */
+  transition: transform 0.12s ease;
+}
+.win-ctrl:hover { background: var(--hover); color: var(--text); }
+.win-ctrl:active { background: var(--hover-strong); }
+.win-ctrl:active svg { transform: scale(0.9); }
+.win-ctrl-close:hover { background: var(--win-close-hover); color: var(--on-danger); }
+.win-ctrl-close:active { background: var(--win-close-hover); }
+
+/* ---- Вертикальные вкладки (Ctrl+Shift+E) ---- */
+/* Полоса уезжает в колонку слева, а сайт хост начинает правее неё: здесь
+   описан только вид.  Ширина 260px — та же константа, что VerticalTabsCssWidth
+   в host/MainForm.cs (раскладка вьюх считается из неё). */
+body.vertical-tabs { --vtabs-w: 260px; }
+body.vertical-tabs .chrome-bar {
+  right: auto;
+  bottom: 0;
+  width: var(--vtabs-w);
+  height: auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 10px 10px 12px;
+  /* Вне полосы колонка не существует: за скруглением внизу просвечивала бы
+     тёмная подложка, как когда-то за верхними углами бара. */
+  border-radius: 0 0 0 var(--win-radius);
+  border-bottom: 0;
+  border-right: 1px solid rgba(255,255,255,0.10);
+}
+/* «Рабочий стол», навигация и кнопки окна — одна строка вверху колонки;
+   кнопки окна прижаты вправо. */
+body.vertical-tabs .chrome-bar > .tab-home,
+body.vertical-tabs .chrome-bar > .bar-nav,
+body.vertical-tabs .chrome-bar > .bar-actions,
+body.vertical-tabs .chrome-bar > .win-controls { flex: 0 0 auto; align-self: stretch; }
+body.vertical-tabs .chrome-bar > .bar-nav,
+body.vertical-tabs .chrome-bar > .bar-actions { justify-content: center; }
+/* Колонка растягивается по высоте окна, вкладки листаются вниз. */
+body.vertical-tabs .chrome-bar > .tabs {
+  flex: 1 1 auto;
+  flex-direction: column;
+  flex-shrink: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+body.vertical-tabs .tabs .tab,
+body.vertical-tabs .tab-home {
+  max-width: none;
+  min-width: 0;
+  width: 100%;
+  flex: 0 0 auto;
+  text-align: left;
+}
+/* Подсказки омнибокса и прочие «под баром» элементы: в колонке «под баром»
+   значит «поверх сайта», поэтому линия отрыва — низ колонки вкладок
+   (--tabbar-bottom ставит tabs.js). */
+body.vertical-tabs .chrome-bar .bar-omni .suggests { top: var(--tabbar-bottom, 100%); }
+/* Настройки, загрузки и палитра — во всю оставшуюся ширину, а не в колонку. */
+body.vertical-tabs .page { left: var(--vtabs-w); }
+
+/* Fallback mode (page opened in a plain browser): no draggable title bar, no
+   window buttons — everything else keeps working. */
+body.no-host .win-controls { display: none; }
+body.no-host .drag-zone { display: none; }
+body.no-host .chrome-bar { border-radius: 0 0 var(--win-radius) var(--win-radius); }
+
+
+/* ---- Translation bubble ---- */
+.bubble {
+  position: fixed;
+  z-index: 40; /* above the bar (30): the button that opens it lives there */
+  width: 340px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: var(--shadow-2);
+  transform-origin: top right;
+  animation: bubble-in 0.22s var(--ease-spring);
+}
+@keyframes bubble-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+}
+.bubble[hidden] { display: none; }
+
+.bubble-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.bubble-close {
+  border: 0; background: transparent; color: var(--text-dim);
+  font-size: 22px; cursor: pointer; line-height: 1;
+  /* Живой контрол: hover-плашка + пружинный нажим (паттерн settings.css). */
+  border-radius: var(--radius-md);
+  transition: background-color 0.12s ease, color 0.12s ease,
+              transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.bubble-close:hover { background: var(--hover); color: var(--text); }
+.bubble-close:active { transform: scale(0.9); transition-duration: 60ms; }
+.bubble-text {
+  width: 100%;
+  resize: none;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--field);
+  color: var(--text);
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  /* Фокус в пузыре перевода виден: акцентная кромка + ринг (паттерн
+     .page-input) — поле не «умирает» при клике. */
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.bubble-text:focus, .bubble-select:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.bubble-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.bubble-select {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.bubble-select option { color: var(--text); background: var(--panel-strong); }
+.swap {
+  border: 0; background: transparent; color: var(--text-dim);
+  font-size: 16px; cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background-color 0.12s ease, color 0.12s ease,
+              transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.swap:hover { background: var(--hover); color: var(--text); }
+.swap:active { transform: scale(0.9); transition-duration: 60ms; }
+.bubble-action {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: var(--on-accent);
+  background: var(--accent);
+  transition: transform 0.18s var(--ease-spring), filter 0.15s ease;
+}
+.bubble-action:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+.bubble-action:active { transform: scale(0.98); }
+.bubble-result {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  min-height: 20px;
+  white-space: pre-wrap;
+  user-select: text;
+}
+.bubble-result.error { color: var(--danger); }
+
+/* ---- Page-transition overlay ---- */
+/* Sits above the bar (z 60); it never intercepts pointer events, so the host
+   page underneath is fully usable while the ripple covers the hand-off. */
+.jump {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.jump.anim { opacity: 1; transition: none; }
+.jump.out { transition: opacity 0.09s ease; }
+.jump[hidden] { display: none; }
+.jump-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-soft) 85%, transparent),
+                                       color-mix(in srgb, var(--accent) 45%, transparent) 62%,
+                                       rgba(0, 0, 0, 0) 74%);
+  box-shadow: var(--ripple-glow);
+  transform: scale(0);
+  will-change: transform;
+}
+.jump.anim .jump-ripple { animation: jump-grow 0.36s var(--ease-spring) forwards; }
+@keyframes jump-grow {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+.jump-ripple.fade { opacity: 0; transition: opacity 0.09s ease; }
+.jump-label {
+  animation: jump-label-in 0.22s var(--ease-spring) both;
+  position: relative;
+  z-index: 1;
+  max-width: 70vw;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: var(--shadow-1);
+  opacity: 0.96;
+}
+@keyframes jump-label-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+}
+
+
+/* ---- Settings sheet ---- */
+.settings {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--scrim);
+  /* Same as .page: no full-screen backdrop blur, it blanks chrome-bar. */
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.settings.show { opacity: 1; }
+.settings[hidden] { display: none; }
+.settings-card {
+  width: min(420px, 92vw);
+  padding: 24px 24px 20px;
+  border-radius: var(--radius-xl);
+  background: var(--panel-strong);
+  box-shadow: var(--shadow-2),
+              0 0 0 1px var(--hairline) inset;
+  transform: translateY(8px) scale(0.97);
+  transition: transform 0.22s var(--ease-spring);
+}
+.settings.show .settings-card { transform: none; }
+.settings-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.settings-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.settings-sub { margin-top: 4px; font-size: 12px; color: var(--text-dim); }
+.settings-label {
+  margin-bottom: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 44px);
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+/* The mode switch shares the palette row: same size, glassy, icon-only. */
+.swatch-mode {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border) !important;
+  background: var(--field) !important;
+  color: var(--text);
+}
+.swatch-mode:hover { background: var(--field-hover) !important; }
+.swatch-mode svg {
+  width: 19px; height: 19px;
+  grid-area: 1 / 1;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: transform 0.22s var(--ease-spring), opacity 0.15s ease;
+}
+.swatch-mode .ico-sun { opacity: 0; transform: scale(0.5) rotate(-60deg); }
+.swatch-mode .ico-moon { opacity: 1; transform: none; }
+.swatch-mode[aria-pressed="true"] .ico-sun { opacity: 1; transform: none; }
+.swatch-mode[aria-pressed="true"] .ico-moon { opacity: 0; transform: scale(0.5) rotate(60deg); }
+
+.swatch {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 transparent, var(--shadow-1);
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease;
+}
+.swatch:hover { transform: scale(1.08); }
+.swatch.active {
+  box-shadow: 0 0 0 2px var(--swatch-ring), 0 0 0 4px var(--accent-soft),
+              0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.settings-btn {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.18s var(--ease-spring);
+}
+.settings-btn:hover { background: var(--hover); }
+.settings-btn:active { transform: scale(0.98); }
+.settings-about {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* Respect users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .blob { animation: none; }
+  .tab-wash { display: none; }
+  .glass, .link-tile, .icon-btn { transition: none; }
+  .jump-ripple { animation: none !important; }
+  .jump-label { animation: none !important; }
+  .jump, .jump.out { transition: none; }
+  .suggest { transition: none; }
+  .search-menu { animation: none !important; }
+  .sm-swatch, .sm-tab, .sm-row { transition: none; }
+  .tab-indicator { transition: none; }
+  .tab.spin .tab-fav::after { animation-duration: 1.6s; }
+  .settings, .settings-card, .swatch, .settings-btn { transition: none; }
+}
+
+/* ---- Accent wash on tab switch ---- */
+/* A short accent bloom under the bar that fades out.  Purely decorative:
+   pointer-events:none, so it can never swallow a click. */
+.tab-wash {
+  position: fixed;
+  top: var(--bar-h);
+  left: 0;
+  right: 0;
+  height: 140px;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(60% 100% at 50% 0%,
+    color-mix(in srgb, var(--accent) 30%, transparent), transparent 72%);
+  opacity: 0;
+}
+/* Блюм вьётся по кастомной кривой (Smoothness Law: никаких стандартных
+   ease) — мягкая атака и длинное масляное затухание вместо ease-out. */
+.tab-wash.flash { animation: tab-wash 0.42s cubic-bezier(0.16, 0.84, 0.26, 1); }
+@keyframes tab-wash {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (max-width: 760px) { .tab-wash { display: none; } }
+
+/* Selection, caret and scrollbars follow the theme instead of the Windows
+   default (blue-on-dark looks foreign inside a glass shell). */
+::selection { background: color-mix(in srgb, var(--accent) 32%, transparent); color: var(--text); }
+.suggests, .bubble-text { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+
+/* ---- Address pill: shows the active site while the strip is in tabs mode ---- */
+.addr-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 360px;
+  height: 32px;
+  margin: 0 8px;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--field-border);
+  border-radius: 999px;
+  background: var(--field);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  /* Материал поля с объёмом: контактная тень + верхний спекуляр. */
+  box-shadow: var(--shadow-1), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  /* max-width used to be in this list; it never changes after render and a
+     layout property in transition-property only costs a style pass. */
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+.addr-pill:hover { background: var(--field-hover); border-color: var(--border-strong); color: var(--text); }
+.addr-pill[hidden] { display: none; }
+/* Каскад входа бара на сайте: НАЗАД → ВПЕРЁД → ОБНОВИТЬ → строка адреса.
+   ЗАДЕРЖКИ от 0.3s ОБЯЗАТЕЛЬНЫ: первые ~300мс перехода фон за стеклом
+   бара меняется каждый кадр (десктоп гаснет / сайт проступает),
+   backdrop-filter пересчитывает блюр на каждом кадре и ЛЮБУЮ анимацию
+   в баре роняет до ~15 fps.  Каскад начинается, когда фон устоялся, и
+   идёт на полном фреймрейте; fill backwards держит элементы невидимыми
+   до их хода.  Класс site-active ставится один раз на входе на сайт —
+   на переключениях сайт↔сайт каскад не переигрывается. */
+@keyframes bar-item-in {
+  from { opacity: 0; transform: translateY(-5px); }
+}
+body.site-active .bar-nav .tab-btn {
+  animation: bar-item-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+/* Под шторкой (site-fast): фон за стеклом успокоился к ~100мс — почти сразу. */
+body.site-active.site-fast .bar-nav .tab-btn:nth-child(1) { animation-delay: 0.1s; }
+body.site-active.site-fast .bar-nav .tab-btn:nth-child(2) { animation-delay: 0.16s; }
+body.site-active.site-fast .bar-nav .tab-btn:nth-child(3) { animation-delay: 0.22s; }
+body.site-active.site-fast .addr-pill { animation-delay: 0.3s; }
+/* Новая вкладка (крест-фейд): фон меняется до ~280мс — каскад с 0.26s. */
+body.site-active .bar-nav .tab-btn:nth-child(1) { animation-delay: 0.26s; }
+body.site-active .bar-nav .tab-btn:nth-child(2) { animation-delay: 0.33s; }
+body.site-active .bar-nav .tab-btn:nth-child(3) { animation-delay: 0.4s; }
+.addr-pill {
+  animation: bar-item-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) 0.47s backwards;
+}
+
+/* ---- Возврат на десктоп: навигация уходит зеркальным каскадом ----
+   Кнопки живут только на сайте: на десктопе .bar-nav скрыт (кроме момента
+   исхода body.bar-leaving — иначе кнопки пропадали бы одним кадром до
+   анимации).  Порядок исхода — зеркальный входу: строка адреса →
+   «Обновить» → «Вперёд» → «Назад».  Класс ставит tabs.js (syncStage) на
+   переходе сайт→десктоп и снимает таймером после каскада. */
+@keyframes bar-item-out {
+  to { opacity: 0; transform: translateY(-5px); }
+}
+body:not(.site-active):not(.bar-leaving) .bar-nav { display: none; }
+body.bar-leaving .bar-nav .tab-btn {
+  animation: bar-item-out 0.16s ease-in forwards;
+}
+body.bar-leaving .bar-nav .tab-btn:nth-child(1) { animation-delay: 0.18s; }
+body.bar-leaving .bar-nav .tab-btn:nth-child(2) { animation-delay: 0.12s; }
+body.bar-leaving .bar-nav .tab-btn:nth-child(3) { animation-delay: 0.06s; }
+.addr-pill.pill-out {
+  animation: bar-item-out 0.18s ease-in forwards;
+  pointer-events: none;
+}
+/* Вход капсулы зеркален выходу: та же геометрия в обратную сторону, но с
+   мягким перелётом — пилюля «выплывает» из бара, а не включается кадром. */
+.addr-pill.pill-in {
+  animation: pill-in 0.18s cubic-bezier(0.3, 1.3, 0.5, 1) backwards;
+}
+@keyframes pill-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .addr-pill, body.site-active .bar-nav .tab-btn,
+  body.bar-leaving .bar-nav .tab-btn, .addr-pill.pill-out,
+  .addr-pill.pill-in { animation: none; }
+}
+.addr-pill .addr-lock { display: grid; place-items: center; flex: 0 0 auto; opacity: 0.7; }
+.addr-pill .addr-lock svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+/* Plain http: crossed-out lock in the danger colour, so "not protected"
+   reads instantly instead of promising security it does not have. */
+.addr-pill .addr-lock .lock-slash { display: none; }
+.addr-pill.addr-insecure .addr-lock { color: var(--danger); opacity: 0.95; }
+.addr-pill.addr-insecure .addr-lock .lock-slash { display: initial; }
+.addr-pill .addr-host { font-weight: 600; color: var(--text); white-space: nowrap; }
+.addr-pill .addr-rest {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.72;
+}
+.addr-pill .addr-copy {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 24px; height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+.addr-pill:hover .addr-copy, .addr-pill:focus-within .addr-copy { opacity: 1; }
+.addr-pill .addr-copy:hover { background: var(--field-hover); color: var(--text); }
+.addr-pill .addr-copy:active { transform: scale(0.9); }
+.addr-pill .addr-copy svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.addr-pill.copied .addr-copy { color: var(--accent); opacity: 1; }
+/* Ad-block shield: the number of requests stopped on this page.  Hidden when
+   nothing was blocked (adshield.js decides) — a permanent "0" is noise. */
+.addr-pill .addr-shield {
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  margin-left: 2px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+.addr-pill .addr-shield:not([hidden]) { display: inline-flex; }
+.addr-pill .addr-shield[hidden] { display: none; }
+/* During typing the strip gives way to the omnibox, address pill included. */
+.chrome-bar.mode-omni .addr-pill { display: none; }
+@media (max-width: 980px) { .addr-pill { max-width: 200px; } }
+@media (max-width: 760px) { .addr-pill { display: none; } }
+
+@media (max-width: 560px) {
+  .engine-badge { padding: 4px; }
+  .engine-badge::after { content: none; }
+}
+
+/* Private window: a chip in the bar, plus a hairline in the accent violet so
+   the mode is visible even when the chip is clipped at a narrow width. */
+.private-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px 0 7px;
+  margin-right: 6px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, #8b5cf6 45%, transparent);
+  background: color-mix(in srgb, #8b5cf6 14%, transparent);
+  color: #c4b5fd;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+.private-chip[hidden] { display: none; }
+.private-chip svg {
+  width: 13px; height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.private-chip svg circle[r="1.1"] { fill: currentColor; stroke: none; }
+body.private-window .chrome-bar {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #8b5cf6 55%, transparent);
+}
+@media (max-width: 760px) { .private-chip span { display: none; } }
+
+/* ==================================================================== */
+/* Wave 5: settings page, downloads, toasts, progress, kill switch      */
+/* ==================================================================== */
+
+/* ---- no-anim kill switch (settings: "Анимации") ---- */
+body.no-anim *, body.no-anim *::before, body.no-anim *::after {
+  animation: none !important;
+  transition: none !important;
+}
+body.no-anim .tab-wash { display: none; }
+
+/* ---- View Transitions (dark/light cross-fade, app.js setMode) ---- */
+::view-transition-old(root),
+::view-transition-new(root) { animation-duration: .22s; }
+
+/* ---- Page-load progress strip on the bar's bottom edge ---- */
+.bar-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+.bar-progress.on { opacity: 1; }
+.bar-progress-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -35%;
+  width: 35%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--accent) 28%, var(--accent-soft) 72%, transparent);
+}
+/* Indeterminate: the segment runs back and forth under the bar.  Двигаем
+   трансформом — анимация left через отрисовку (layout+paint) всю полосу;
+   на длинной загрузке это ощутимый фон.  will-change живёт на классе
+   indeterminate и снимается вместе с ним. */
+.bar-progress.indeterminate .bar-progress-fill {
+  animation: progress-slide 1s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes progress-slide {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(var(--slide-span, 620px), 0, 0); }
+}
+/* Done: quick run to 100%, then a 300 ms fade-out (120 ms + 180 ms). */
+.bar-progress.done { animation: progress-fade .18s ease .12s forwards; }
+.bar-progress.done .bar-progress-fill { left: 0; width: 100%; }
+@keyframes progress-fade { to { opacity: 0; } }
+
+/* ---- Toasts (under the bar; hidden on sites by queueing in toasts.js) ---- */
+.toasts {
+  position: fixed;
+  top: calc(var(--bar-h) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 80; /* above the fullscreen dialogs (75): settings feedback shows */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  position: relative;
+  max-width: min(420px, 86vw);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--panel-strong);
+  border: 1px solid var(--hairline);
+  color: var(--text);
+  font-size: 13px;
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  cursor: pointer;
+  user-select: none;
+  /* Тост кликабелен — он дышит: подъём на hover, нажим на active.
+     translate-канал свободен (вход живёт в animation transform). */
+  transition: translate 0.2s var(--ease-spring), transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* fill backwards держит 0-кадр при animationDelay — каскад очереди
+     (toasts.js) не показывает тост раньше его ступени. */
+  animation: toast-in 0.24s cubic-bezier(0.34, 1.3, 0.64, 1) backwards;
+}
+/* Типовая кромка: акцентная спина слева — тост читается «событием», а не
+   серой плашкой.  ::after занят? — нет: рисуем через ::before. */
+.toast::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.85;
+}
+.toast:hover { translate: 0 -1px; }
+.toast:active { transform: scale(0.98); transition-duration: 60ms; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-14px) scale(0.97); }
+}
+.toast.out { animation: toast-out 0.18s cubic-bezier(0.4, 0, 1, 1) forwards; }
+@keyframes toast-out {
+  to { opacity: 0; transform: translateY(-14px); }
+}
+
+/* ---- Tab birth/death animations ---- */
+.tab-enter { animation: tab-enter 0.18s var(--ease-spring); }
+@keyframes tab-enter {
+  from { opacity: 0; transform: scale(0.9); }
+}
+/* Inert clone of a closing tab, pinned where the original sat. */
+.tab-ghost {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.tab-leave { animation: tab-leave 0.16s ease-in forwards; }
+@keyframes tab-leave {
+  to { opacity: 0; transform: scale(0.8); }
+}
+
+/* ---- Downloads badge on the bar button ---- */
+.dl-btn { position: relative; }
+.dl-btn.has-active { color: var(--accent-soft); } /* P3-4: класс ставит downloads.js */
+.dl-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--shadow-1);
+  pointer-events: none;
+}
+.dl-badge[hidden] { display: none; }
+
+/* ---- Fullscreen dialog pages (settings, downloads) ---- */
+.page {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--scrim);
+  /* No backdrop-filter on the scrim: a full-screen blur makes Chromium drop
+     the layers below it, so chrome-bar and tabs behind a dialog went grey /
+     empty. The solid scrim alone reads the same. */
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.page.show { opacity: 1; }
+.page[hidden] { display: none; }
+.page-card {
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 94vw);
+  height: min(88vh, 780px);
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  background: var(--panel-strong);
+  transform: translateY(8px) scale(0.97);
+  transition: transform 0.22s var(--ease-spring);
+}
+.page.show .page-card { transform: none; }
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.page-title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.page-sub { margin-top: 4px; font-size: 12px; color: var(--text-dim); }
+.page-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+  /* Колесо и клавиатура едут с мягким хвостом вместо рубленых скачков.
+     Только внутренние панели: страницы сайтов в своих вьюхах, их не трогаем. */
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-scroll { scroll-behavior: auto; }
+}
+.page-section {
+  padding: 16px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+}
+.page-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+.page-version { font-size: 11px; color: var(--text-faint); user-select: text; }
+.page-done { width: auto; min-width: 112px; padding: 12px 24px; }
+
+.field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.field-row + .field-row { margin-top: 12px; }
+.field-row.field-col {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.field-label { font-size: 12px; color: var(--text-dim); }
+.page-select,
+.page-input {
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.page-select { width: min(240px, 100%); cursor: pointer; }
+.page-select option { color: var(--text); background: var(--panel-strong); }
+.page-select:disabled option { color: var(--text-dim); }
+.page-input { width: 100%; user-select: text; }
+.page-input:focus, .page-select:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.page-range { width: 100%; accent-color: var(--accent); cursor: pointer; }
+
+/* ---- Toggle switches ---- */
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0 0;
+  cursor: pointer;
+}
+.field-row + .switch-row { margin-top: 12px; }
+.switch-row + .switch-row { margin-top: 4px; }
+.switch-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.switch-title { font-size: 13px; font-weight: 600; }
+.switch-sub { font-size: 11px; color: var(--text-dim); }
+/* The checkbox stays focusable for the keyboard; only its look is hidden. */
+.switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+/* ui-design-brain guidelines: tappable switch area 44px+, done button
+   min-height 36px, numeric columns right-aligned in the downloads list. */
+.switch-row { min-height: 44px; }
+/* "Готово" is the single primary (accent-filled) button on the screen. */
+.page-done {
+  min-height: 36px;
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+.page-done:hover { background: var(--accent); filter: brightness(1.1); }
+.dl-meta-num, .dl-speed { text-align: right; font-variant-numeric: tabular-nums; }
+.switch-ui {
+  flex: 0 0 auto;
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--field);
+  border: 1px solid var(--border);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.switch-ui::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  /* Бегунок едет трансформом, а не left: left на псевдоэлементе дороже
+     (layout внутри карточки) и даёт полкадра рассинхрона с треком. */
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: transform 0.2s var(--ease-spring), background 0.2s ease;
+}
+.switch-input:checked + .switch-ui {
+  background: var(--accent);
+  border-color: transparent;
+}
+.switch-input:checked + .switch-ui::after { transform: translateX(18px); background: var(--on-accent); }
+.switch-input:focus-visible + .switch-ui {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---- Hotkeys reference ---- */
+.hotkeys {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.hotkeys td { padding: 8px 0; }
+.hotkeys tr:not(:last-child) td { border-bottom: 1px solid var(--hairline); }
+.hotkeys td:first-child { width: 1%; padding-right: 24px; white-space: nowrap; }
+.hotkeys td:last-child { color: var(--text-dim); }
+.hotkeys kbd {
+  display: inline-block;
+  min-width: 16px;
+  padding: 2px 6px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--field);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ---- Export / import ---- */
+.btn-row { display: flex; gap: 8px; }
+.btn-row .settings-btn { flex: 1; }
+
+/* ---- Downloads list ---- */
+#downloads-list { gap: 8px; }
+.page-empty {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.page-empty[hidden] { display: none; }
+.dl-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  animation: dl-row-in 0.2s var(--ease-spring);
+}
+/* Вход только у новых строк: downloads.js пересоздаёт узлы ~10 Гц,
+   и без .dl-new строка переигрывала бы анимацию всю загрузку (P2-1). */
+.dl-item:not(.dl-new) { animation: none; }
+@keyframes dl-row-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+.dl-item.st-canceled .dl-name, .dl-item.st-error .dl-name { color: var(--text-dim); }
+.dl-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dl-name {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dl-path {
+  font-size: 11px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dl-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--field);
+  overflow: hidden;
+}
+.dl-bar span {
+  /* Анимация ширины пересчитывала layout при каждом апдейте прогресса —
+     на активной загрузке это заметная дёрготня списка.  Полоса рисуется
+     целиком и сжимается трансформом: только композитор. */
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.25s ease;
+}
+.dl-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.dl-state { font-weight: 600; color: var(--text); }
+.dl-state.bad { color: var(--danger); }
+.dl-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+.dl-act {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s var(--ease-spring);
+}
+.dl-act svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dl-act:hover { background: var(--hover); color: var(--text); }
+.dl-act:active { transform: scale(0.92); }
+.dl-cancel:hover { background: var(--danger-soft); color: var(--danger-text); }
+
+/* ---- Wave 5 reduced-motion additions ---- */
+@media (prefers-reduced-motion: reduce) {
+  .toast, .toast.out, .dl-item, .tab-enter, .tab-leave { animation: none; }
+  .page, .page-card, .dl-bar span, .switch-ui, .switch-ui::after { transition: none; }
+  .bar-progress.indeterminate .bar-progress-fill { animation: none; }
+}
+
+/* Settings · palette row (4px grid, controls in one aligned line) */
+.palette-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.palette-row .swatch-grid {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+}
+.palette-row .swatch { width: 26px; height: 26px; }
+.palette-random { flex: 0 0 auto; opacity: 0.85; }
+.palette-random:hover { opacity: 1; }
+
+/* ==================================================================== */
+/* Wave 7: motion polish (Agent-Motion)                                 */
+/* Glider, omnibox spring, suggestion cascade, theme glide fallback.    */
+/* Everything here animates transform/opacity only and honours both     */
+/* prefers-reduced-motion and the body.no-anim kill switch.             */
+/* ==================================================================== */
+
+/* ---- Sliding highlight behind the active tab (tabs.js syncGlider) ---- */
+/* The width is carried by scaleX against a 100px base so the slide stays
+   transform-only; translateX moves the left edge (transform-origin 0 50%).
+   The pill is the first child of the strip and the .tab buttons are
+   position:relative, so it always paints behind them. */
+.tab-glider {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  width: 100px;
+  border-radius: var(--radius-md);
+  background: var(--tab-active);
+  opacity: 0;                 /* JS shows it once it has a measured position */
+  pointer-events: none;
+  transform-origin: 0 50%;
+  /* transform ведёт JS-интерполяция (см. animateGlider): CSS-переход
+     стартовал бы от старой позиции и ронял быстрые переключения. */
+  transition: opacity 0.14s ease;
+}
+.tabs .tab { position: relative; }
+/* The glider IS the active highlight inside the strip now — a static
+   background would double it while the pill is mid-slide.  The home tab
+   (outside the strip) keeps its own painted state. */
+.tabs .tab.active { background: transparent; }
+
+/* ---- Omnibox spring (app.js setBarMode) ---- */
+/* In: 250ms overshoot spring when the bar hands over to typing mode; out:
+   180ms ease-in collapse before the strip returns.  will-change rides on
+   the class, so removing the class on animationend releases it. */
+/* The pop uses the independent `scale` property, not `transform`: the capsule
+   already carries the typing-mode `translate` offset (see .mode-omni below),
+   and a keyframed transform would overwrite it and fling the pill left for
+   the duration of the spring. */
+#ntp-omnibox .search.omni-spring {
+  animation: omni-spring-in 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: scale, opacity;
+}
+@keyframes omni-spring-in {
+  from { opacity: 0; scale: 0.85; }
+}
+#ntp-omnibox .search.omni-out {
+  animation: omni-out 180ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  will-change: scale, opacity;
+}
+@keyframes omni-out {
+  to { opacity: 0; scale: 0.85; }
+}
+
+/* ---- Suggestion rows cascade (search.js markSuggestIn) ---- */
+/* Every list replacement cascades: 22ms per row when the panel opens, 12ms
+   per row when a keystroke refills it.  The beat lives in --sug-delay (set by
+   JS), so both tiers share one keyframe and one duration.
+   Only transform + opacity: the rows never reflow the panel, so the native
+   dropdown layer's measured rect stays valid while the cascade plays. */
+.suggest.suggest-in {
+  animation: suggest-row-in 0.3s var(--ease-spring) both;
+  animation-delay: var(--sug-delay, 0ms);
+  will-change: transform, opacity;
+}
+@keyframes suggest-row-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+/* Released with the class on animationend, but a safety net costs nothing:
+   the no-anim kill switch can freeze an animation before it ever ends. */
+.suggest:not(.suggest-in) { will-change: auto; }
+/* Rows left over from the previous query while the relay is still answering
+   (search.js previewFilter).  They fade back instead of sitting there looking
+   authoritative: the swap that follows no longer reads as a jump, because the
+   old list has already receded.  Opacity only — same composited layer. */
+.suggest-stale {
+  opacity: 0.35;
+  transition: opacity 0.12s ease;
+}
+.suggest.suggest-in.suggest-stale { animation-name: suggest-row-in; }
+
+/* ---- Theme swap fallback (app.js setMode, engines without View
+   Transitions): a temporary html.theme-anim class lets the key surfaces
+   glide between the palettes for 180ms. ---- */
+html.theme-anim body { transition: background 0.18s ease !important; }
+html.theme-anim .glass,
+html.theme-anim .chrome-bar,
+html.theme-anim .weather,
+html.theme-anim .suggest,
+html.theme-anim .search-menu,
+html.theme-anim .tab,
+html.theme-anim .tab-btn,
+html.theme-anim .icon-btn,
+html.theme-anim .win-ctrl,
+html.theme-anim .sm-tab,
+html.theme-anim .sm-row,
+html.theme-anim .link-tile,
+html.theme-anim .toast,
+html.theme-anim .page-card,
+html.theme-anim .page-section {
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease !important;
+}
+
+/* ---- Reduced motion: everything from Wave 7 lands instantly ---- */
+@media (prefers-reduced-motion: reduce) {
+  .tab-glider { transition: none !important; }
+  .tabs .tab.active { background: var(--tab-active); } /* static highlight back */
+  #ntp-omnibox .search.omni-spring,
+  #ntp-omnibox .search.omni-out { animation: none !important; }
+  .suggest.suggest-in { animation: none !important; }
+  html.theme-anim body,
+  html.theme-anim .glass,
+  html.theme-anim .chrome-bar,
+  html.theme-anim .weather,
+  html.theme-anim .suggest,
+  html.theme-anim .search-menu,
+  html.theme-anim .tab,
+  html.theme-anim .tab-btn,
+  html.theme-anim .icon-btn,
+  html.theme-anim .win-ctrl,
+  html.theme-anim .sm-tab,
+  html.theme-anim .sm-row,
+  html.theme-anim .link-tile,
+  html.theme-anim .toast,
+  html.theme-anim .page-card,
+  html.theme-anim .page-section { transition: none !important; }
+}
+
+/* ==================================================================== */
+/* Wave 8: Cyberpunk 2077 / Night City skin ([data-theme="cyberpunk"])  */
+/* Включается палитрой night-city в тёмном режиме (app.js setMode).     */
+/* Void black, жёлтый/циан/магента, ноль скруглений, жёсткие тени,       */
+/* моноширинный UI, HUD-уголки, глитч-входы, scanlines.                 */
+/* Шрифты встроены (shell/fonts, woff2 переменные, без CDN) —           */
+/* JetBrains Mono (кириллица+латиница) для всего UI, Orbitron — только  */
+/* для дисплейных цифр (часы): кириллицы в Orbitron нет.                */
+/* Анимации — по-прежнему только transform/opacity; infinite-глитчи     */
+/* ставятся на паузу body.occ и снимаются no-anim/reduced-motion.       */
+/* ==================================================================== */
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/jbm-cyr.woff2") format("woff2");
+  font-weight: 100 800;
+  font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/jbm-cyr-ext.woff2") format("woff2");
+  font-weight: 100 800;
+  font-display: swap;
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/jbm-lat.woff2") format("woff2");
+  font-weight: 100 800;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Orbitron";
+  src: url("fonts/orbitron-var.woff2") format("woff2");
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+/* ---- Токены (Этап 1) ---- */
+/* Спека: void black #0a0a0a, панели #1a1a1a, приподнятое #2a2a2a;       */
+/* жёлтый #fcee09 (действия/фокус), циан #00f0ff (данные/ссылки),        */
+/* магента #ff003c (ошибки); текст #f7f7ff / #8a8aa8; радиус 0.          */
+/* Имена --accent-* дублируют спецификацию (--accent-yellow = --accent). */
+html[data-theme="cyberpunk"] {
+  --accent-yellow: #fcee09;
+  --accent-cyan: #00f0ff;
+  --accent-magenta: #ff003c;
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-elevated: #2a2a2a;
+
+  --accent: var(--accent-yellow);
+  --accent-soft: var(--accent-cyan);
+  --bg-a: var(--bg-primary);
+  --bg-b: #111111;
+  --text: #f7f7ff;                 /* не чисто белый */
+  --text-dim: #8a8aa8;
+  --text-faint: #8a8aa8;           /* 5.6:1 на #0a0a0a — AA держит */
+
+  --radius-xl: 0px;                /* никаких скруглений */
+  --radius-lg: 0px;
+  --radius-md: 0px;
+  --win-radius: 0px;
+
+  --glass-bg: var(--bg-secondary);
+  --glass-border: #2a2a2a;
+  --glass-spec: none;
+  --hero-bg: var(--bg-secondary);
+  --panel: rgba(16, 16, 16, 0.97);
+  --panel-strong: #101010;
+  --bar-bg: rgba(10, 10, 10, 0.96);
+  --bar-rim: rgba(252, 238, 9, 0.30);
+  --bar-edge: rgba(252, 238, 9, 0.22);
+  --field: var(--bg-secondary);
+  --field-hover: #232323;
+  --hover: rgba(252, 238, 9, 0.08);
+  --hover-strong: rgba(252, 238, 9, 0.16);
+  --field-border: #2e2e2e;
+  --tab-active: rgba(252, 238, 9, 0.10);
+  --card-bg: #141414;
+  --tile-bg: var(--bg-secondary);
+  --tile-bg-hover: #242424;
+  --border: #2a2a2a;
+  --border-strong: #3a3a3a;
+  --hairline: #222222;
+
+  /* Жёсткая тень вместо мягкой: 8px 8px 0 var(--bg-primary). */
+  --shadow-1: 4px 4px 0 var(--bg-primary);
+  --shadow-2: 8px 8px 0 var(--bg-primary);
+  --clock-glow: 0 0 18px rgba(252, 238, 9, 0.35), 0 0 64px rgba(252, 238, 9, 0.12);
+  --scrim: rgba(0, 0, 0, 0.68);
+  --ripple-glow: 0 0 90px rgba(252, 238, 9, 0.25);
+  --emph: var(--accent-yellow);    /* совпадение в подсказках — жёлтым */
+  --on-accent: var(--bg-primary);  /* текст на жёлтом — чёрный */
+  --danger-soft: rgba(255, 0, 60, 0.16);
+  --danger-text: #ff4d6e;
+  --danger: var(--accent-magenta);
+  --on-danger: #ffffff;
+  --focus-ring: var(--accent-yellow);
+  --win-close-hover: var(--accent-magenta);
+  --swatch-ring: var(--bg-primary);
+  color-scheme: dark;
+}
+
+/* ---- Поверхности (Этап 3): чёрные панели, жёсткие рамки ---- */
+html[data-theme="cyberpunk"] body {
+  font-family: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+  letter-spacing: 0.01em;
+  /* Void + едва заметная жёлтая сетка (статичный фон — без перфа). */
+  background:
+    linear-gradient(rgba(252, 238, 9, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(252, 238, 9, 0.028) 1px, transparent 1px),
+    var(--bg-primary);
+  background-size: 44px 44px, 44px 44px, auto;
+  transition: none;
+}
+/* Night City keeps the grid and drops the aurora, but the pointer halo stays:
+   a neon bloom over the black reads as city light, not as a decoration. */
+html[data-theme="cyberpunk"] .aurora { display: none; }
+
+/* Полосы прокрутки (подсказки Яндекса, списки) без светлых желобков. */
+html[data-theme="cyberpunk"] ::-webkit-scrollbar { width: 8px; height: 8px; }
+html[data-theme="cyberpunk"] ::-webkit-scrollbar-track { background: var(--bg-primary); }
+html[data-theme="cyberpunk"] ::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+html[data-theme="cyberpunk"] ::-webkit-scrollbar-thumb:hover { background: var(--accent-yellow); }
+
+html[data-theme="cyberpunk"] .glass {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-2);
+  transition: none;
+}
+/* Дисплейный шрифт — только крупные элементы (часы). */
+html[data-theme="cyberpunk"] .clock {
+  font-family: "Orbitron", "JetBrains Mono", monospace;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+html[data-theme="cyberpunk"] .weather,
+html[data-theme="cyberpunk"] .weather-temp { letter-spacing: 0.02em; }
+
+/* ---- HUD-уголки (L-brackets): ::before/::after, border на двух сторонах ---- */
+html[data-theme="cyberpunk"] .hero,
+html[data-theme="cyberpunk"] .search-menu,
+html[data-theme="cyberpunk"] .page-card,
+html[data-theme="cyberpunk"] .bubble { position: relative; }
+html[data-theme="cyberpunk"] .hero::before,
+html[data-theme="cyberpunk"] .search-menu::before,
+html[data-theme="cyberpunk"] .page-card::before,
+html[data-theme="cyberpunk"] .bubble::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid var(--accent-yellow);
+  border-left: 2px solid var(--accent-yellow);
+  pointer-events: none;
+  z-index: 1;
+}
+html[data-theme="cyberpunk"] .hero::after,
+html[data-theme="cyberpunk"] .search-menu::after,
+html[data-theme="cyberpunk"] .page-card::after,
+html[data-theme="cyberpunk"] .bubble::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 14px;
+  height: 14px;
+  border-bottom: 2px solid var(--accent-yellow);
+  border-right: 2px solid var(--accent-yellow);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Плитки ссылок: квадрат, циановая рамка, жёсткая тень (не пилюля). */
+html[data-theme="cyberpunk"] .link-tile {
+  border-radius: 0;
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  background: var(--bg-elevated);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 4px 4px 0 var(--bg-primary);
+  color: var(--text);
+}
+html[data-theme="cyberpunk"] .link-tile:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  box-shadow: 4px 4px 0 var(--bg-primary), 0 0 8px rgba(0, 240, 255, 0.45);
+  transform: none;
+}
+html[data-theme="cyberpunk"] .link-tile:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--bg-primary); }
+
+/* ---- Бар: чёрный, без стекла, жёлтая нижняя граница ---- */html[data-theme="cyberpunk"] .chrome-bar {
+  background-color: var(--bar-bg);
+  background-image: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1px solid var(--accent-yellow);
+  border-radius: 0;
+  box-shadow: none;
+}
+html[data-theme="cyberpunk"] .chrome-bar::before { content: none; }
+
+/* ---- Омнибокс: квадрат, чёрный, в фокусе — жёлтая 1px рамка ---- */
+html[data-theme="cyberpunk"] .search {
+  border-radius: 0;
+  background: var(--bg-secondary);
+  border-color: var(--field-border);
+  transition: none;
+}
+html[data-theme="cyberpunk"] .omnibox:focus-within .search,
+html[data-theme="cyberpunk"] .chrome-bar .bar-omni .search:focus-within {
+  border-color: var(--accent-yellow);
+  box-shadow: 0 0 0 1px var(--accent-yellow), 0 0 12px rgba(252, 238, 9, 0.22);
+}
+html[data-theme="cyberpunk"] .engine-dot { border-radius: 0; }
+html[data-theme="cyberpunk"] .search-input { font-family: inherit; }
+/* Иконки — тонкие линии по currentColor; в кожу их случайно не затянуло. */
+html[data-theme="cyberpunk"] .icon-btn svg,
+html[data-theme="cyberpunk"] .tab-btn svg,
+html[data-theme="cyberpunk"] .win-ctrl svg,
+html[data-theme="cyberpunk"] .dl-act svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- Вкладки: активная — жёлтая нижняя граница + свечение ---- */
+/* В полосе подсветку несёт скользящий glider (единственная плавная
+   анимация кожи), «Рабочий стол» снаружи полосы красит своё .active. */
+html[data-theme="cyberpunk"] .tab,
+html[data-theme="cyberpunk"] .tab-home { border-radius: 0; transition: none; }
+html[data-theme="cyberpunk"] .tab-home.active {
+  background: var(--tab-active);
+  box-shadow: inset 0 -2px 0 var(--accent-yellow);
+}
+html[data-theme="cyberpunk"] .tab-glider {
+  border-radius: 0;
+  background: var(--tab-active);
+  border-bottom: 2px solid var(--accent-yellow);
+  box-shadow: 0 0 8px rgba(252, 238, 9, 0.30);
+  /* transform is owned by the JS spring (tabs.js animateGlider) in EVERY
+     skin.  A CSS transition here fired only in cyber and fought the spring:
+     two interpolators on one property meant every follow-up render (title,
+     URL, favicon arriving during a load) restarted a fresh 160ms ease from
+     whatever value the spring last wrote — that is the underline wobble on
+     page load.  Only opacity (the reveal) stays in CSS. */
+  transition: opacity 0.14s ease;
+}
+html[data-theme="cyberpunk"] .tab-fav { border-radius: 0; }
+html[data-theme="cyberpunk"] .tab-close { border-radius: 0; }
+html[data-theme="cyberpunk"] .tab-close:hover { background: var(--danger-soft); }
+
+/* ---- Кнопки: квадратные, при наведении — инверсия (жёлтый/чёрный) ---- */
+html[data-theme="cyberpunk"] .icon-btn,
+html[data-theme="cyberpunk"] .tab-btn {
+  border-radius: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--field-border);
+  transition: none;
+}
+html[data-theme="cyberpunk"] .icon-btn:hover,
+html[data-theme="cyberpunk"] .tab-btn:hover {
+  background: var(--accent-yellow);
+  border-color: var(--accent-yellow);
+  color: var(--bg-primary);
+}
+html[data-theme="cyberpunk"] .icon-btn:active,
+html[data-theme="cyberpunk"] .tab-btn:active { transform: none; }
+/* Кнопки внутри капсулы омнибокса — прозрачные, инверсия при наведении. */
+html[data-theme="cyberpunk"] .chrome-bar .bar-omni .icon-btn,
+html[data-theme="cyberpunk"] .omnibox .icon-btn {
+  background: transparent;
+  border-color: transparent;
+}
+html[data-theme="cyberpunk"] .chrome-bar .bar-omni .icon-btn:hover,
+html[data-theme="cyberpunk"] .omnibox .icon-btn:hover {
+  background: var(--accent-yellow);
+  border-color: var(--accent-yellow);
+}
+
+/* ---- Микро-взаимодействия: резкий щелчок, без плавных переходов ---- */
+html[data-theme="cyberpunk"] .suggest,
+html[data-theme="cyberpunk"] .sm-row,
+html[data-theme="cyberpunk"] .sm-tab,
+html[data-theme="cyberpunk"] .sm-swatch,
+html[data-theme="cyberpunk"] .swatch,
+html[data-theme="cyberpunk"] .addr-pill,
+html[data-theme="cyberpunk"] .settings-btn,
+html[data-theme="cyberpunk"] .dl-act,
+html[data-theme="cyberpunk"] .win-ctrl,
+html[data-theme="cyberpunk"] .bubble-action,
+html[data-theme="cyberpunk"] .tab-close,
+html[data-theme="cyberpunk"] .link-tile { transition: none; }
+html[data-theme="cyberpunk"] .suggest:active,
+html[data-theme="cyberpunk"] .link-tile:active,
+html[data-theme="cyberpunk"] .settings-btn:active,
+html[data-theme="cyberpunk"] .dl-act:active { transform: none; }
+html[data-theme="cyberpunk"] .suggest.active {
+  background: var(--tab-active);
+  box-shadow: inset 2px 0 0 var(--accent-cyan);
+}
+html[data-theme="cyberpunk"] .suggest:hover { background: var(--hover); }
+html[data-theme="cyberpunk"] .suggest-fav img { border-radius: 0; }
+html[data-theme="cyberpunk"] .suggest-tab-hint {
+  border-radius: 0;
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+/* ---- Плитки: чёрные карточки, циановая обводка при наведении ---- */
+html[data-theme="cyberpunk"] .link-tile { border: 1px solid rgba(0, 240, 255, 0.35); }
+html[data-theme="cyberpunk"] .link-dot { border-radius: 0; }
+
+/* ---- Меню/палитра/адрес: квадрат, чёрный фон ---- */
+html[data-theme="cyberpunk"] .sm-mode { border-radius: 0; }
+html[data-theme="cyberpunk"] .sm-tab { border-radius: 0; }
+html[data-theme="cyberpunk"] .sm-swatch { border-radius: 0; }
+html[data-theme="cyberpunk"] .sm-tab.active {
+  background: var(--tab-active);
+  color: var(--accent-yellow);
+}
+html[data-theme="cyberpunk"] .addr-pill {
+  border-radius: 0;
+  background: var(--bg-secondary);
+}
+html[data-theme="cyberpunk"] .addr-pill:hover { border-color: var(--accent-cyan); }
+html[data-theme="cyberpunk"] .addr-pill .addr-copy { border-radius: 0; }
+
+/* ---- Диалоги/настройки: квадратные тумблеры, kbd, свотчи ---- */
+html[data-theme="cyberpunk"] .settings-card,
+html[data-theme="cyberpunk"] .page-card,
+html[data-theme="cyberpunk"] .page-section,
+html[data-theme="cyberpunk"] .dl-item,
+html[data-theme="cyberpunk"] .bubble,
+html[data-theme="cyberpunk"] .bubble-text,
+html[data-theme="cyberpunk"] .bubble-select,
+html[data-theme="cyberpunk"] .bubble-action,
+html[data-theme="cyberpunk"] .page-select,
+html[data-theme="cyberpunk"] .page-input,
+html[data-theme="cyberpunk"] .hotkeys kbd,
+html[data-theme="cyberpunk"] .dl-bar,
+html[data-theme="cyberpunk"] .dl-bar span,
+html[data-theme="cyberpunk"] .dl-badge,
+html[data-theme="cyberpunk"] .toast,
+html[data-theme="cyberpunk"] .jump-label,
+html[data-theme="cyberpunk"] .swatch { border-radius: 0; }
+
+/* Тумблер-«рубильник»: пустой чёрный трек с 1px рамкой, бегунок — жёлтый
+   квадрат.  Заливка всего трека акцентом читается как «включено всегда». */
+html[data-theme="cyberpunk"] .switch-ui {
+  background: var(--bg-primary);
+  border: 1px solid var(--field-border);
+  box-shadow: none;
+  box-sizing: border-box;      /* рамка внутрь: бегунок не выедет за край */
+}
+html[data-theme="cyberpunk"] .switch-ui::after {
+  /* Трек 42px минус две рамки = 40px внутри; бегунок 18px, 2px зазор
+     с каждой стороны → крайнее правое положение 40-18-2 = 20px. */
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: var(--text-dim);
+  box-shadow: none;
+}
+html[data-theme="cyberpunk"] .switch-input:checked + .switch-ui {
+  background: var(--bg-primary);
+  border-color: var(--accent-yellow);
+}
+html[data-theme="cyberpunk"] .switch-input:checked + .switch-ui::after {
+  transform: translateX(18px); /* 40(border-box) - 18(бегунок) - 2·2(зазор) */
+  background: var(--accent-yellow);
+  box-shadow: 0 0 6px var(--accent-yellow);
+}
+html[data-theme="cyberpunk"] .dl-badge { box-shadow: var(--shadow-1); }
+html[data-theme="cyberpunk"] .dl-bar span { background: var(--accent-cyan); }
+html[data-theme="cyberpunk"] .bubble-action { background: var(--accent-yellow); }
+html[data-theme="cyberpunk"] .bubble-action:hover {
+  background: var(--accent-cyan);
+  color: var(--bg-primary);
+}
+html[data-theme="cyberpunk"] .page-done:hover { filter: none; background: var(--accent-yellow); }
+html[data-theme="cyberpunk"] .dl-state.bad { color: var(--accent-magenta); }
+html[data-theme="cyberpunk"] .dl-cancel:hover { background: var(--danger-soft); }
+html[data-theme="cyberpunk"] .bar-progress-fill {
+  border-radius: 0;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan) 30%, var(--accent-yellow) 75%, transparent);
+}
+html[data-theme="cyberpunk"] ::selection {
+  background: rgba(252, 238, 9, 0.85);
+  color: var(--bg-primary);
+}
+html[data-theme="cyberpunk"] .engine-badge { border-radius: 0; }
+html[data-theme="cyberpunk"] .addr-lock .lock-slash { stroke: var(--accent-magenta); }
+
+/* ---- Глитч-вход панелей (Этап 4): steps() вместо пружинки ---- */
+/* transform + opacity, 4-5 ступеней, короткая длительность. */
+/* Translated through the independent `translate` property for the same
+   reason as omni-spring-in: the omnibox capsule keeps its centring offset
+   in `translate`, and a transform keyframe would cancel it mid-glitch. */
+@keyframes glitch-in {
+  0% { opacity: 0; translate: -3px 0; }
+  25% { opacity: 1; translate: 2px 0; }
+  50% { opacity: 0.6; translate: -1px 0; }
+  75% { opacity: 1; translate: 1px 0; }
+  100% { opacity: 1; translate: none; }
+}
+html[data-theme="cyberpunk"] .suggests,
+html[data-theme="cyberpunk"] .search-menu,
+html[data-theme="cyberpunk"] .bubble,
+html[data-theme="cyberpunk"] .toast {
+  animation: glitch-in 0.18s steps(4, end);
+}
+/* Пружинка омнибокса в кибер-коже — глитч-вход (спека Этапа 4). */
+html[data-theme="cyberpunk"] #ntp-omnibox .search.omni-spring,
+html[data-theme="cyberpunk"] .bar-omni .search.omni-spring {
+  animation: glitch-in 0.19s steps(5, end);
+  will-change: transform, opacity;
+}
+html[data-theme="cyberpunk"] .suggest.suggest-in {
+  /* The shorthand resets animation-delay, so the cascade beat is restated —
+     without it every row of the skin would glitch in on the same frame. */
+  animation: suggest-row-in 0.16s steps(3, end) both;
+  animation-delay: var(--sug-delay, 0ms);
+}
+
+/* ---- Scanlines: ЭЛТ-текстура поверх всего шелла (тумблер) ---- */
+/* Статичный слой: один composite, без анимации — перф не трогает. */
+html[data-theme="cyberpunk"] body.scanlines::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 2px,
+    rgba(0, 0, 0, 0.10) 2px 4px
+  );
+}
+
+/* ---- «Усиленный глитч» (тумблер): редкие точечные сбои ---- */
+/* Только transform/opacity, почти всё время покоя; body.occ паузит. */
+html[data-theme="cyberpunk"] body.glitch-max .clock {
+  animation: clock-glitch 7s steps(1, end) infinite;
+}
+@keyframes clock-glitch {
+  0%, 92.9%, 94.2%, 100% { transform: none; opacity: 1; }
+  93% { transform: translateX(-2px); opacity: 0.7; }
+  93.4% { transform: translateX(2px); opacity: 1; }
+  93.8% { transform: translateX(-1px); opacity: 0.85; }
+}
+html[data-theme="cyberpunk"] body.glitch-max .hero::before,
+html[data-theme="cyberpunk"] body.glitch-max .hero::after {
+  animation: bracket-flicker 5s steps(2, end) infinite;
+}
+@keyframes bracket-flicker {
+  0%, 96%, 98.1%, 100% { opacity: 1; }
+  97% { opacity: 0.2; }
+  98% { opacity: 0.55; }
+}
+body.occ .clock,
+body.occ .hero::before,
+body.occ .hero::after { animation-play-state: paused; }
+
+/* ---- Reduced motion: глитчи выключаются целиком ---- */
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="cyberpunk"] .suggests,
+  html[data-theme="cyberpunk"] .search-menu,
+  html[data-theme="cyberpunk"] .bubble,
+  html[data-theme="cyberpunk"] .toast,
+  html[data-theme="cyberpunk"] #ntp-omnibox .search.omni-spring,
+  html[data-theme="cyberpunk"] .bar-omni .search.omni-spring,
+  html[data-theme="cyberpunk"] .suggest.suggest-in { animation: none !important; }
+  html[data-theme="cyberpunk"] body.glitch-max .clock,
+  html[data-theme="cyberpunk"] body.glitch-max .hero::before,
+  html[data-theme="cyberpunk"] body.glitch-max .hero::after { animation: none !important; }
+  html[data-theme="cyberpunk"] .tab-glider { transition: none; }
+}
+
+/* Настройки: блок «Night City» виден только когда кожа активна. */
+.cyber-only { display: none; }
+html[data-theme="cyberpunk"] .cyber-only { display: block; margin-top: 18px; }
+
+/* ---- Feel layer (feel.js) ------------------------------------------- */
+/* Тактильный нажим: сжатие МГНОВЕННОЕ (feel.js ставит .is-pressed в кадре
+   нажатия, transition: none не даёт переходу «размазать» продавливание),
+   возврат — пружиной .32s с перелётом (0.34, 1.56, 0.64, 1) — контрол
+   физически «отпрыгивает» из-под пальца.  Канал transform один на список
+   свойств: scale/translate включены, чтобы hover-подъёмы и сдвиги строк
+   из menu.css уехали тем же композитным пайпом. */
+.tab, .tab-btn, .icon-btn, .link-tile, .suggest, .bubble-action,
+.settings-btn, .dl-act, .tab-close, .sm-tab, .sm-row, .sm-swatch,
+.swatch, .page-nav-chip, .pal-row, .rc-row, .rc-toggle, .rc-clear,
+.addr-copy, .bubble-close, .swap, .menu-item, .palette-item {
+  transition: transform .32s cubic-bezier(0.34, 1.56, 0.64, 1),
+              scale .32s cubic-bezier(0.34, 1.56, 0.64, 1),
+              translate .2s var(--ease-spring),
+              background-color .15s ease, color .15s ease,
+              border-color .15s ease, box-shadow .2s ease, opacity .15s ease;
+}
+/* Нажатие: без перехода — сжатие читается как давление, а не как анимация. */
+.is-pressed { transform: scale(.955) !important; transition: none !important; }
+/* Плитки: нажим своим scale — глобальный transform-squish не нужен, у
+   плитки transform вообще пустой (наклона-слежения больше нет). */
+body:not(.tactile-off) .link-tile.is-pressed {
+  scale: 0.955;
+}
+/* Тумблер «Тактильный отклик» / reduce-motion: никакого продавливания. */
+body.tactile-off .is-pressed, body.no-anim .is-pressed { transform: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .is-pressed { transform: none !important; }
+}
+/* Возврат CSS-:active (клавиатура, нативный слой без feel.js): сжатие за
+   60мс, откат пружиной с базовой длительностью. */
+:is(.tab, .tab-btn, .icon-btn, .link-tile, .suggest, .settings-btn,
+    .dl-act, .bubble-action, .tab-close, .addr-copy):active {
+  transition-duration: 60ms !important;
+}
+/* Перетаскиваемая вкладка: inline-transform ведёт drag-код, нажим не смеет
+   его перекрывать (!important у .is-pressed побил бы translateX). */
+.tabs.tab-dragging .is-pressed { transform: none !important; }
+/* Подъём драгуемой вкладки: тень запечена в ::after и проявляется
+   прозрачностью (переход box-shadow запрещён — repaint всей тени каждый
+   кадр; здесь только opacity — композитор).  z-index: -1 кладёт слой ЗА
+   кнопку: у драг-кнопки свой stacking context (инлайн z-index из tabs.js),
+   тень не заливает её собственный текст.  Гасится всеми тумблерами и
+   кибер-кожей (там свои жёсткие тени без перелёта). */
+.tab-drag-src::after {
+  content: '';
+  position: absolute;
+  inset: 3px 3px 1px 3px;
+  border-radius: inherit;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, .32), 0 14px 30px rgba(0, 0, 0, .24);
+  opacity: 0;
+  transition: opacity .14s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+body.tactile-off .tab-drag-src::after,
+body.no-anim .tab-drag-src::after { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .tab-drag-src::after { display: none; }
+}
+html[data-theme="cyberpunk"] .tab-drag-src::after { content: none; }
+/* Оконные кнопки: масштабирует глиф, не сама полоска (кнопка до края окна —
+   скалирование уехало бы от рамки). */
+.win-ctrl svg { transition: transform .18s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.win-ctrl.is-pressed svg { transform: scale(.82); }
+.win-ctrl.is-pressed { transform: none !important; }
+/* Тумблер настроек: проседает сам переключатель, не вся строка (строка на
+   всю ширину карточки — её масштаб читался бы как дрожь макета). */
+.switch-row.is-pressed { transform: none !important; }
+.switch-row.is-pressed .switch-ui { scale: .92; }
+
+/* ---- Micro-shake ошибки (LiveFeel.shake) ----------------------------- */
+/* ±2px туда-сюда за 160мс на независимом `translate`: transform занят
+   squish'ем и другими эффектами, чтобы не конфликтовать. */
+@keyframes lb-shake {
+  0%, 100% { translate: 0 0; }
+  25% { translate: -2px 0; }
+  55% { translate: 2px 0; }
+  80% { translate: -1px 0; }
+}
+.lb-shake { animation: lb-shake .16s linear; }
+body.no-anim .lb-shake, body.tactile-off .lb-shake { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lb-shake { animation: none; }
+}
+
+/* ---- Часы: цифры меняются мягким тиком ------------------------------- */
+/* #clock размечается на спаны (app.js tick): каждая цифра при смене
+   поднимается из лёгкого сдвига — смена «без дёрганий», ширина держится
+   tabular-nums. */
+.clock { display: flex; }
+.clock-d { display: inline-block; }
+.clock-d.tick { animation: clock-tick .26s var(--ease-spring); }
+@keyframes clock-tick {
+  from { opacity: 0; transform: translateY(5px); }
+}
+body.no-anim .clock-d.tick { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .clock-d.tick { animation: none; }
+}
+
+/* ---- Погода: кроссфейд при обновлении -------------------------------- */
+/* Приехали новые данные (или «нет данных») — карточка перелистывается
+   каскадом: иконка, температура, подпись с задержкой 45мс. */
+.weather.wx-swap > * { animation: wx-in .32s var(--ease-spring) both; }
+.weather.wx-swap > :nth-child(2) { animation-delay: 45ms; }
+.weather.wx-swap > :nth-child(3) { animation-delay: 90ms; }
+@keyframes wx-in {
+  from { opacity: 0; transform: translateY(5px); }
+}
+body.no-anim .weather.wx-swap > *, body.tactile-off .weather.wx-swap > * { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .weather.wx-swap > * { animation: none; }
+}
+
+/* ---- Пустые состояния: заглушка проявляется с задержкой --------------- */
+.page-empty { animation: lb-empty-in .28s ease .1s both; }
+@keyframes lb-empty-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-empty { animation: none; }
+}
+
+/* ---- Плитки: глубина — тень наращивается через псевдослой ------------- */
+/* box-shadow переходить нельзя (repaint всей тени) — тень заранее запечена
+   в ::after и проявляется прозрачностью: композитор, ноль перерисовки.
+   В кибер-коже своя жёсткая тень — слой не нужен. */
+.link-tile { position: relative; }
+/* Вход плиток (renderLinks ставит ступень 30мс; fill backwards держит
+   0-кадр до старта): спокойное появление — короткий fade с лёгким
+   подъёмом, БЕЗ scale и перелётов (по решению пользователя).  Класс
+   снимается по animationend (app.js). */
+.link-tile.tile-in {
+  animation: tile-in 0.3s cubic-bezier(0.25, 0.6, 0.3, 1) backwards;
+}
+@keyframes tile-in {
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .link-tile.tile-in { animation: none; }
+}
+/* Кибер-кожа: жёсткая геометрия, вход без пружин (там transform: none на
+   hover и свои тени). */
+html[data-theme="cyberpunk"] .link-tile.tile-in { animation: none; }
+html[data-theme="cyberpunk"] .link-tile:hover { scale: none; translate: none; }
+html[data-theme="cyberpunk"] .link-tile:active { scale: none; }
+html:not([data-theme="cyberpunk"]) .link-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  /* Двухслойная глубина: контактная + дальний рассеянный — плитка
+     «парит» над стеной, а не прижата к ней.  Слой статичен, живёт
+     только opacity — композитор. */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28), 0 16px 40px rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  /* Чуть длиннее (.3s): глубина наливается вместе с разбуханием scale —
+     единый такт подъёма. */
+  transition: opacity .3s ease;
+  pointer-events: none;
+}
+html:not([data-theme="cyberpunk"]) .link-tile:hover::after { opacity: 1; }
+html:not([data-theme="cyberpunk"]) .link-tile:active::after {
+  opacity: 0;
+  transition-duration: .1s;
+}
+
+/* ---- Пункты меню поиска: сдвиг вправо под курсором -------------------- */
+.sm-row:hover { translate: 2px 0; }
+.sm-row:active { translate: 1px 0; }
+
+/* ---- Спиннер: мягкий «взмах» вместо резкого маха ---------------------- */
+.tab.spin .tab-fav::after,
+.chrome-bar.is-loading #nav-reload svg {
+  animation-timing-function: cubic-bezier(0.5, 0.15, 0.5, 0.85);
+  animation-duration: .95s;
+}
+
+/* ---- Нативный слой (dropdown.html): нажим без feel.js ----------------- */
+/* В панельном вьюхе app.css есть, а feel.js нет — там нажим держит :active. */
+.dd-list .suggest:active { transform: scale(.97); }
+.dd-list .sm-row:active { translate: 1px 0; scale: .985; }
+
+/* ---- Rubber band (feel.js): контейнер тянется `translate` ------------- */
+/* Вытяжка идет независимым свойством translate: композитор сам поднимает
+   слой на время анимации, отдельная подготовка не нужна. */
+
+/* Лента «Что я видел»: мягкое затухание у краёв вместо ножа.
+   ВАЖНО: только горизонтально скроллящиеся ленты.  Стрип плиток .links
+   переносится строками и не скроллится — маска на нём ничего не даёт,
+   но режет верх плитки при hover-подъёме (маска клиппит всё за границей
+   бокса, а плитки прилегают к верхней кромке вплотную). */
+#recent-bar, .recent-strip {
+  --fade-l: 0px; --fade-r: 0px;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fade-l),
+                      #000 calc(100% - var(--fade-r)), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--fade-l),
+                      #000 calc(100% - var(--fade-r)), transparent 100%);
+}
+#recent-bar.fade-l, .recent-strip.fade-l { --fade-l: 28px; }
+#recent-bar.fade-r, .recent-strip.fade-r { --fade-r: 28px; }
+
+/* ---- Bar overflow: «Ещё» ---- */
+/* Moved-out anchors: the modules keep listening/binding, the pixels are gone. */
+.bar-actions .hidden-anchor {
+  position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.more-btn { position: relative; }
+.more-btn.is-open { background: var(--hover-strong); color: var(--text); }
+.tab-badge {
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 2px var(--badge-ring);
+}
+.tab-badge[hidden] { display: none; }
+/* The overlay menu anchored to «Ещё» is right-aligned with its button. */
+.lb-menu.bar-menu { min-width: 220px; }
+
+/* ---- Исходящая анимация поповеров (закрывание тоже анимируется) ----
+   Инструкция для JS: вешать .lb-exit на закрываемый узел, снимать по
+   animationend (или таймеру 150мс) и только потом ставить hidden — иначе
+   [hidden]{display:none} перебивает анимацию.  pointer-events:none гасит
+   клики во время излёта, чтобы «призрак» не ловил указатель. */
+@keyframes lb-pop-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(4px) scale(0.97); }
+}
+.lb-exit {
+  animation: lb-pop-out 0.14s ease both;
+  pointer-events: none;
+}

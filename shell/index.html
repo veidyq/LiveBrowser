@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LiveBrowser</title>
+  <!-- Фавиконка: тот же знак, что в host/app.ico (исходник — logo/logo.svg).
+       Оболочка живёт на виртуальном хосте, поэтому файл обязан лежать в
+       shell/: без этой ссылки WebView2 просит /favicon.ico, получает 404 и
+       рисует глиф «пустой документ». -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <!-- Шрифты кибер-кожи: грузим заранее, чтобы первый кадр после смены
+       палитры не мигал системным шрифтом.  Это только подсказки, а
+       настоящие @font-face — в app.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="fonts/jbm-cyr.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/jbm-lat.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/orbitron-var.woff2" crossorigin>
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="palette.css">
+  <link rel="stylesheet" href="settings.css">
+  <link rel="stylesheet" href="history.css">
+  <link rel="stylesheet" href="translate-offer.css">
+  <!-- Экран первого запуска, первый такт: кинематографичное интро.
+       welcome-choices.css (второй такт — выборы темы/палитры/поисковика)
+       подключается лениво из welcome.js и только если интро действительно
+       было.  Заранее не грузим: при повторном запуске онбординг не нужен. -->
+  <link rel="stylesheet" href="intro.css">
+  <!-- Контекстное меню оболочки и микро-жесты (menu.js).  После app.css:
+       надстройки кнопок не должны проигрывать каскаду базовых :active. -->
+  <link rel="stylesheet" href="menu.css">
+</head>
+<body>
+  <div class="aurora" aria-hidden="true">
+    <span class="blob blob-a"></span>
+    <span class="blob blob-b"></span>
+    <span class="blob blob-c"></span>
+  </div>
+  <!-- Мягкое свечение, идущее за курсором: обои «живые».  Отдельным слоем,
+       потому что blur(60px) у .aurora размазал бы его в кашу. -->
+  <div class="wall-glow" id="wall-glow" aria-hidden="true"></div>
+
+  <!-- Command surface: the window's own title bar.  It is the tab strip while
+       you look at a page and the omnibox while you type; the host draws every
+       site in its own child view below it. -->
+  <header class="chrome-bar" id="chrome-bar">
+    <div class="drag-zone" id="drag-zone" aria-hidden="true"></div>
+
+    <button class="tab tab-home" id="tab-home-tab" type="button" title="Рабочий стол" aria-label="Рабочий стол">
+      <!-- Знак приложения вместо глифа ⌂: tab-fav нужен плейсхолдер той же
+           формы, поэтому это картинка, а не текст.  mark.png — кадр 24px из
+           host/app.ico, тот же источник, что у favicon.svg. -->
+      <span class="tab-fav tab-fav-home" aria-hidden="true"><img src="mark.png" alt="" width="16" height="16"></span>
+      <span class="tab-title">Рабочий стол</span>
+    </button>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Вкладки"></div>
+
+    <div class="bar-nav" aria-label="Навигация">
+      <button class="tab-btn" id="nav-back" type="button" title="Назад" aria-label="Назад" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+      </button>
+      <button class="tab-btn" id="nav-forward" type="button" title="Вперёд" aria-label="Вперёд" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button class="tab-btn" id="nav-reload" type="button" title="Обновить" aria-label="Обновить">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 11a8 8 0 1 0-2.3 6.3"/><path d="M20 5v6h-6"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Address of the active site while the strip is shown: reads the URL,
+         copies it, and gives a way into the omnibox (a click focuses it). -->
+    <button class="addr-pill" id="addr-pill" type="button" title="Адрес сайта — нажми, чтобы изменить" hidden>
+      <span class="addr-lock" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.2 10.5V8a3.8 3.8 0 0 1 7.6 0v2.5"/><path class="lock-slash" d="M4.5 4.5l15 15"/></svg>
+      </span>
+      <span class="addr-host" id="addr-host"></span>
+      <span class="addr-rest" id="addr-rest"></span>
+      <span class="addr-shield" id="addr-shield" hidden>0</span>
+      <span class="addr-copy" id="addr-copy" role="button" tabindex="0" aria-label="Скопировать адрес">
+        <svg viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 5.5H6.7A2.2 2.2 0 0 0 4.5 7.7v8.8"/></svg>
+      </span>
+    </button>
+
+    <!-- Private window marker: shown only when the host says this window has
+         a wiped profile, so the mode is never a guess from a theme colour. -->
+    <span class="private-chip" id="private-chip" title="Приватное окно: история и куки этого окна удаляются при закрытии" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><circle cx="12" cy="16.4" r="1.1"/></svg>
+      <span>Приватно</span>
+    </span>
+
+    <div class="bar-actions">
+      <!-- Primary cluster: new tab + one overflow menu.  Everything secondary
+           (recent, history, downloads, home, settings) lives in the «Ещё»
+           overlay so the bar stays readable at any window width.  The ids of
+           the moved buttons are kept: history/settings/downloads modules bind
+           to them, and the overlay items call click() on them. -->
+      <button class="tab-btn" id="tab-new" type="button" title="Новая вкладка" aria-label="Новая вкладка">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button class="tab-btn more-btn" id="more-btn" type="button" title="Ещё" aria-label="Ещё"
+              aria-expanded="false" aria-haspopup="menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/>
+        </svg>
+        <span class="tab-badge more-badge" id="more-badge" hidden>0</span>
+      </button>
+      <!-- Kept in the DOM but rendered as size-0 anchors so the moved modules
+           keep working; the visible entry points are the overlay rows. -->
+      <button class="tab-btn hidden-anchor" id="recent-btn" type="button" tabindex="-1" aria-hidden="true">
+        <span class="recent-count" id="recent-count" hidden>0</span>
+      </button>
+      <button class="tab-btn hidden-anchor" id="tab-home" type="button" tabindex="-1" aria-hidden="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10V20h11V10"/></svg>
+      </button>
+      <button class="tab-btn dl-btn hidden-anchor" id="downloads-btn" type="button" tabindex="-1" aria-hidden="true">
+        <span class="dl-badge" id="dl-badge" hidden>0</span>
+      </button>
+      <button class="tab-btn hidden-anchor" id="settings-btn" type="button" tabindex="-1" aria-hidden="true"></button>
+    </div>
+
+    <div class="bar-omni" id="bar-omni" hidden></div>
+
+    <div class="win-controls" aria-label="Управление окном">
+      <button class="win-ctrl" type="button" data-win="mini" title="Свернуть" aria-label="Свернуть">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 5.5h6"/></svg>
+      </button>
+      <button class="win-ctrl" type="button" data-win="maxi" title="Развернуть" aria-label="Развернуть">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><rect x="2.2" y="2.2" width="5.6" height="5.6" rx="1"/></svg>
+      </button>
+      <button class="win-ctrl win-ctrl-close" type="button" data-win="closeapp" title="Закрыть" aria-label="Закрыть">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.4 2.4l5.2 5.2M7.6 2.4 2.4 7.6"/></svg>
+      </button>
+    </div>
+
+    <!-- Page-load progress for the active site tab: a 2px accent line on the
+         bar's bottom edge (driven by host "progress" pushes, tabs.js). -->
+    <div class="bar-progress" id="bar-progress" aria-hidden="true">
+      <span class="bar-progress-fill"></span>
+    </div>
+  </header>
+
+  <!-- Accent bloom played when a tab is switched (decorative only). -->
+  <div class="tab-wash" id="tab-wash" aria-hidden="true"></div>
+
+  <main class="stage" id="stage">
+    <section class="glass hero" data-depth="1.0">
+      <div class="clock" id="clock">--:--</div>
+      <div class="date" id="date"></div>
+
+      <div class="weather" id="weather">
+        <span class="weather-icon" id="weather-icon">–</span>
+        <span class="weather-temp" id="weather-temp">--°</span>
+        <span class="weather-desc" id="weather-desc">погода</span>
+      </div>
+    </section>
+
+    <section class="omnibox" id="ntp-omnibox" data-depth="0.6">
+      <div class="glass search">
+        <button class="icon-btn" id="translate-btn" title="Перевести" aria-label="Перевести">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 7 8M10 13c-2 3-5 5-8 6"/>
+            <path d="M14 20l3.2-8h1.6L22 20M15.3 17h3.9"/>
+          </svg>
+        </button>
+        <input id="search" class="search-input" type="text" autocomplete="off"
+               placeholder="Найти в Яндексе или ввести адрес…" aria-label="Поиск"
+               role="combobox" aria-expanded="false" aria-controls="suggests"
+               aria-autocomplete="list">
+        <span class="engine-badge" aria-label="Поиск в Яндексе">
+          <i class="engine-dot">Я</i>
+        </span>
+        <button class="icon-btn" id="theme-btn" title="Настройки вида" aria-label="Настройки вида"
+                aria-haspopup="menu" aria-expanded="false" aria-controls="search-menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.2"/>
+            <path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/>
+          </svg>
+        </button>
+      </div>
+      <div class="glass suggests" id="suggests" role="listbox" hidden></div>
+      <!-- Search menu (gear popover): palette swatches, the dark/light switch
+           and the entry into the full settings page.  The home screen draws it
+           right here; over a site tab the same content is relayed to the
+           host's native panel layer (bridge "menu", app.js). -->
+      <div class="glass search-menu" id="search-menu" role="menu" aria-label="Настройки вида" hidden>
+        <div class="sm-swatches" id="sm-swatches" role="group" aria-label="Палитры"></div>
+        <div class="sm-mode" id="sm-mode" role="group" aria-label="Тёмная или светлая тема">
+          <button class="sm-tab" type="button" role="menuitemradio" aria-checked="true"
+                  data-sm-mode="dark">Тёмная</button>
+          <button class="sm-tab" type="button" role="menuitemradio" aria-checked="false"
+                  data-sm-mode="light">Светлая</button>
+        </div>
+        <div class="sm-sep" aria-hidden="true"></div>
+        <button class="sm-row" id="sm-settings" type="button" role="menuitem">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.2"/>
+            <path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/>
+          </svg>
+          <span>Все настройки</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="links" id="links"></section>
+
+    <!-- "Что я видел": collapsible history strip under the tiles (history.js).
+         Collapsed by default (localStorage lb.recentOpen); the header row and
+         its arrow both toggle.  Cards come from GET /api/history?limit=12. -->
+    <section class="recent-bar" id="recent-bar" data-id="recent" aria-label="Недавнее">
+      <div class="rc-head" id="recent-head">
+        <span class="rc-eyebrow">Недавнее</span>
+        <button class="rc-toggle" id="recent-toggle" type="button"
+                title="Развернуть недавнее" aria-label="Развернуть недавнее"
+                aria-expanded="false" aria-controls="recent-row">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div class="rc-body">
+        <div class="rc-row" id="recent-row" role="list"></div>
+      </div>
+      <div class="rc-foot">
+        <span class="rc-count" id="recent-count-line">0 записей</span>
+        <span class="rc-dot-sep" aria-hidden="true">·</span>
+        <button class="rc-clear" id="recent-clear" type="button">Очистить</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Full settings page: appearance, browser, downloads, hotkeys,
+       export/import (settings.js).  Shares the host's overlay channel with
+       the sheet above, so the two never open at once. -->
+  <div class="page" id="settings-page" role="dialog" aria-modal="true" aria-label="Все настройки" hidden>
+    <div class="page-card glass">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Все настройки</div>
+          <div class="page-sub">Изменения сохраняются автоматически</div>
+        </div>
+        <button class="bubble-close" id="settings-page-close" type="button" aria-label="Закрыть">×</button>
+      </div>
+
+      <!-- Section chips: jump to a group and see where you are (settings.js
+           marks .is-active from the scroll position). -->
+      <nav class="page-nav" id="settings-nav" aria-label="Разделы настроек">
+        <button class="page-nav-chip" type="button" data-goto="set-appearance">Внешний вид</button>
+        <button class="page-nav-chip" type="button" data-goto="set-browser">Браузер</button>
+        <button class="page-nav-chip" type="button" data-goto="set-optimize">Оптимизация</button>
+        <button class="page-nav-chip" type="button" data-goto="set-hotkeys">Клавиши</button>
+        <button class="page-nav-chip" type="button" data-goto="set-config">Конфиг</button>
+        <button class="page-nav-chip" type="button" data-goto="set-about">О браузере</button>
+      </nav>
+
+      <div class="page-scroll">
+        <section class="page-section" id="set-appearance">
+          <div class="settings-label">Внешний вид</div>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Анимации</span>
+              <span class="switch-sub">Плавные переходы, вспышки вкладок и параллакс</span>
+            </span>
+            <input type="checkbox" id="set-anim" class="switch-input" role="switch" aria-label="Анимации">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Тактильный отклик</span>
+              <span class="switch-sub">Нажимы с пружиной, микро-шейк ошибок и «резинка» скролла</span>
+            </span>
+            <input type="checkbox" id="set-tactile" class="switch-input" role="switch" aria-label="Тактильный отклик">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+          <!-- Показ приветствия заново (settings.js).  Не тумблер, а кнопка:
+               повтор вызывается один раз, а не удерживается в положении. -->
+          <div class="switch-row switch-row-action">
+            <span class="switch-text">
+              <span class="switch-title">Приветствие первого запуска</span>
+              <span class="switch-sub" id="set-welcome-note">Интро показывается один раз, при следующем старте</span>
+            </span>
+            <button class="settings-btn settings-btn-inline" id="set-welcome-replay" type="button">Показать снова</button>
+          </div>
+        <div class="field-label">Палитра</div>
+        <div class="palette-row">
+          <div class="swatch-grid" id="swatch-grid" role="group" aria-label="Палитры"></div>
+          <button class="icon-btn palette-random" id="random-palette" type="button" title="Случайная палитра" aria-label="Случайная палитра">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.4"/><circle cx="15.5" cy="8.5" r="1.4"/><circle cx="8.5" cy="15.5" r="1.4"/><circle cx="15.5" cy="15.5" r="1.4"/></svg>
+          </button>
+        </div>
+        <!-- Тонкие настройки кожи Night City (cyberpunk): блок виден только
+             пока активна [data-theme="cyberpunk"] (правило в app.css). -->
+        <div class="cyber-only">
+          <div class="field-label">Night City</div>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Scanlines</span>
+              <span class="switch-sub">ЭЛТ-текстура поверх интерфейса</span>
+            </span>
+            <input type="checkbox" id="set-cyber-scanlines" class="switch-input" role="switch" aria-label="Scanlines">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Усиленный глитч</span>
+              <span class="switch-sub">Редкие сбои часов и HUD-уголков</span>
+            </span>
+            <input type="checkbox" id="set-cyber-glitch" class="switch-input" role="switch" aria-label="Усиленный глитч">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+        </div>
+        </section>
+
+        <section class="page-section" id="set-browser">
+          <div class="settings-label">Браузер</div>
+          <div class="field-row">
+            <label class="field-label" for="set-search">Поисковик</label>
+            <select id="set-search" class="page-select">
+              <option value="yandex" selected>Яндекс</option>
+              <option value="google">Google</option>
+              <option value="duckduckgo">DuckDuckGo</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="set-newtab">Новая вкладка</label>
+            <select id="set-newtab" class="page-select">
+              <option value="desktop" selected>Рабочий стол</option>
+              <option value="blank">Пустая страница</option>
+            </select>
+          </div>
+          <div class="field-row field-col">
+            <label class="field-label" for="set-zoom">Зум по умолчанию — <span id="set-zoom-val">100%</span></label>
+            <input type="range" id="set-zoom" class="page-range" min="50" max="200" step="5" value="100"
+                   aria-label="Зум по умолчанию">
+          </div>
+        </section>
+
+        <section class="page-section" id="set-downloads">
+          <div class="settings-label">Загрузки</div>
+          <div class="field-row field-col">
+            <label class="field-label" for="set-dl-dir">Папка загрузок (пусто — стандартная «Загрузки»)</label>
+            <input type="text" id="set-dl-dir" class="page-input" placeholder="C:\Users\…\Downloads"
+                   spellcheck="false" autocomplete="off" aria-label="Папка загрузок">
+          </div>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Спрашивать, куда сохранять</span>
+              <span class="switch-sub">Диалог выбора папки для каждого файла</span>
+            </span>
+            <input type="checkbox" id="set-dl-ask" class="switch-input" role="switch" aria-label="Спрашивать, куда сохранять">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Автоматически открывать файлы</span>
+              <span class="switch-sub">Запускать файл сразу после загрузки</span>
+            </span>
+            <input type="checkbox" id="set-dl-auto" class="switch-input" role="switch" aria-label="Автоматически открывать файлы">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+        </section>
+
+        <!-- Оптимизация (settings.js): производительность и данные.  Тумблеры
+             пишутся в тот же settings.json через /api/settings; кнопки
+             очистки ходят в /api/data/clear, строка статуса — GET /api/status. -->
+        <section class="page-section" id="set-optimize">
+          <div class="settings-label">Оптимизация</div>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Фоновая приостановка вкладок</span>
+              <span class="switch-sub">Неактивные вкладки замирают и не тратят процессор</span>
+            </span>
+            <input type="checkbox" id="set-bg-suspend" class="switch-input" role="switch" aria-label="Фоновая приостановка вкладок">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Стеклянный фон</span>
+              <span class="switch-sub">Тяжёлое размытие под панелями (выключи, если GPU в нагрузке)</span>
+            </span>
+            <input type="checkbox" id="set-bg-blur" class="switch-input" role="switch" aria-label="Стеклянный фон">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Аппаратное ускорение</span>
+              <span class="switch-sub">GPU для страниц — требует перезапуска</span>
+            </span>
+            <input type="checkbox" id="set-hw-accel" class="switch-input" role="switch" aria-label="Аппаратное ускорение">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Использовать кеш</span>
+              <span class="switch-sub">Хранить кеш страниц между запусками</span>
+            </span>
+            <input type="checkbox" id="set-cache" class="switch-input" role="switch" aria-label="Использовать кеш">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-text">
+              <span class="switch-title">Блокировать рекламу</span>
+              <span class="switch-sub" id="adblock-count">Известные рекламные и трекерные хосты</span>
+            </span>
+            <input type="checkbox" id="set-adblock" class="switch-input" role="switch" aria-label="Блокировать рекламу">
+            <span class="switch-ui" aria-hidden="true"></span>
+          </label>
+          <div class="opt-clear-row">
+            <button class="settings-btn opt-clear" id="adblock-update" type="button">Обновить базу</button>
+          </div>
+
+          <div class="field-label opt-data-label">Данные браузера</div>
+          <div class="opt-clear-row">
+            <button class="settings-btn opt-clear" id="clear-cache" type="button">Кеш</button>
+            <button class="settings-btn opt-clear" id="clear-cookies" type="button">Куки</button>
+            <button class="settings-btn opt-clear" id="clear-history" type="button">История</button>
+            <button class="settings-btn opt-clear opt-clear-all" id="clear-all" type="button">Всё</button>
+          </div>
+          <div class="opt-status" id="opt-status" role="status" aria-live="polite">История: — · Куки: — · Кеш: — · Память: —</div>
+        </section>
+
+        <section class="page-section" id="set-about">
+          <div class="settings-label">О браузере</div>
+          <div class="field-row field-col">
+            <div class="about-line"><b>LiveBrowser</b> <span id="about-version">1.0</span> — портативный браузер на WebView2. Все данные живут рядом с exe: скопируй папку на флешку — браузер поедет с ней.</div>
+            <div class="about-line about-dim">Движок страниц: <span id="about-runtime">Microsoft Edge WebView2</span></div>
+          </div>
+          <div class="field-row field-col">
+            <button class="settings-btn" id="set-update-check" type="button">Проверить обновления</button>
+          </div>
+        </section>
+
+        <section class="page-section" id="set-hotkeys">
+          <div class="settings-label">Горячие клавиши</div>
+          <table class="hotkeys">
+            <tbody>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>L</kbd>, <kbd>F6</kbd></td><td>Адресная строка</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>T</kbd></td><td>Новая вкладка — рабочий стол</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>W</kbd></td><td>Закрыть вкладку</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd></td><td>Вернуть закрытую вкладку</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>Tab</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd></td><td>Следующая / предыдущая вкладка</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td><td>Новое окно</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>+</kbd> / <kbd>−</kbd> / <kbd>0</kbd></td><td>Масштаб страницы</td></tr>
+              <tr><td><kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>→</kbd></td><td>Назад / вперёд</td></tr>
+              <tr><td><kbd>F5</kbd>, <kbd>Ctrl</kbd>+<kbd>R</kbd></td><td>Обновить страницу</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>K</kbd></td><td>Командная палитра</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>F</kbd></td><td>Поиск по странице</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td><td>Печать</td></tr>
+              <tr><td><kbd>F11</kbd></td><td>Фокус-режим — полоса скрыта, <kbd>Esc</kbd> возвращает</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="page-section" id="set-config">
+          <div class="settings-label">Конфигурация</div>
+          <div class="btn-row">
+            <button class="settings-btn" id="set-export" type="button">Экспорт settings.json</button>
+            <button class="settings-btn" id="set-import" type="button">Импорт…</button>
+            <input type="file" id="set-import-file" accept=".json,application/json" hidden>
+          </div>
+        </section>
+      </div>
+
+      <div class="page-foot">
+        <span class="page-version" id="app-version">LiveBrowser 1.0</span>
+        <button class="settings-btn page-done" id="settings-page-done" type="button">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Downloads manager page (downloads.js): mirrors host "download" pushes;
+       v1 shows only transfers that arrived during this run. -->
+  <div class="page" id="downloads-page" role="dialog" aria-modal="true" aria-label="Загрузки" hidden>
+    <div class="page-card glass">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Загрузки</div>
+          <div class="page-sub">Файлы, скачанные в этом запуске</div>
+        </div>
+        <button class="bubble-close" id="downloads-close" type="button" aria-label="Закрыть">×</button>
+      </div>
+      <div class="page-scroll" id="downloads-list"></div>
+      <div class="page-empty" id="downloads-empty">Пока пусто — здесь появятся файлы, когда ты что-то скачаешь.</div>
+    </div>
+  </div>
+
+  <div class="bubble" id="translate-bubble" hidden>
+    <div class="bubble-arrow"></div>
+    <div class="bubble-head">
+      <strong>Перевод</strong>
+      <button class="bubble-close" id="bubble-close" aria-label="Закрыть">×</button>
+    </div>
+    <textarea id="src-text" class="bubble-text" rows="3"
+              placeholder="Введи текст для перевода…"></textarea>
+    <div class="bubble-row">
+      <select id="src-lang" class="bubble-select">
+        <option value="auto" selected>Определить</option>
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="zh">中文</option>
+      </select>
+      <button class="swap" id="swap" aria-label="Поменять языки">⇄</button>
+      <select id="dst-lang" class="bubble-select">
+        <option value="en">English</option>
+        <option value="ru" selected>Русский</option>
+        <option value="de">Deutsch</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="zh">中文</option>
+      </select>
+    </div>
+    <button class="bubble-action" id="translate-go">Перевести</button>
+    <div class="bubble-result" id="result" aria-live="polite"></div>
+  </div>
+
+  <!-- Page-transition overlay: the ripple grows from the omnibox or the
+       clicked row, the host opens the tab immediately, then it fades. -->
+  <div class="jump" id="jump" hidden aria-hidden="true">
+    <span class="jump-ripple" id="jump-ripple"></span>
+    <div class="jump-label" id="jump-label"></div>
+  </div>
+
+  <!-- Command palette (Ctrl+K, palette.js): Raycast-style overlay.  The
+       root stays empty until the palette is opened for the first time. -->
+  <div id="palette-root"></div>
+
+  <!-- Recently closed tabs popover (history.js): filled on first open, sits
+       under #recent-btn.  Lower layer than the suggest panel/palette. -->
+  <div class="recent-pop glass" id="recent-pop" role="dialog" aria-label="Недавно закрытые" hidden></div>
+
+  <script src="pops.js"></script>
+  <!-- Вендор плавности (всё локально в shell\vendor, без CDN): GSAP —
+       таймлайн хореографии переключения вкладок; Lenis — масляный скролл
+       внутренних областей (см. scroll.js).  Motion (motion.min.js) пока НЕ
+       подключён: физика вкладок написана руками, а 75 KB мёртвого парса на
+       каждый старт — трата (BUG_REPORT m7).  Файл в vendor лежит — вернуть
+       одним <script>, когда Motion реально понадобится. -->
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/lenis.min.js"></script>
+  <script src="app.js"></script>
+  <script src="wallpaper.js"></script>
+  <script src="tabs.js"></script>
+  <script src="search.js"></script>
+  <script src="toasts.js"></script>
+  <script src="settings.js"></script>
+  <script src="downloads.js"></script>
+  <script src="translate.js"></script>
+  <script src="translate-offer.js"></script>
+  <script src="palette.js"></script>
+  <script src="history.js"></script>
+  <script src="feel.js"></script>
+  <!-- Скролл-слой (Lenis) после feel.js: резинка краёв зарегистрирована
+       раньше, Lenis не спорит с ней у краёв (см. scroll.js). -->
+  <script src="scroll.js"></script>
+  <script src="optimize.js"></script>
+  <script src="adshield.js"></script>
+  <script src="private.js"></script>
+  <!-- Контекстное меню, перенос вкладки и приём ссылок (menu.js): после
+       tabs.js/history.js/settings.js — берёт их живой API в момент клика.
+       Грузится лениво (modules.js): без него не работают «Ещё», меню
+       рабочего стола и перенос вкладок, поэтому его предзагружают
+       pointerenter по «Ещё» и pointerdown по полосе вкладок. -->
+  <!-- Турбо-слой старта: последним.  Добавляет window.__lbFavicon (кэш
+       data:-иконок по хосту, key lb_fav_<host>) — им пользуются модули,
+       которые ищут фавикон вкладки в localStorage.  Дописывает
+       диагностику window.__boot в консоль на load и ничего не меняет в
+       поведении других модулей. -->
+  <!-- Приветствие первого запуска: грузится лениво, сразу после старта
+       (само спрашивает /api/firstrun и показывает экран только на чистом
+       профиле), чтобы не задерживать первый кадр.  Два модуля:
+       welcome.js — оркестратор, intro.js — сам фильм.  Контракт времени
+       (intro-clock.js) грузится сразу: без него интро не может построить
+       кадр, а он же общий с композицией HyperFrames. -->
+  <!-- Поиск по странице (Ctrl+F): панель + релей через хост в сайт-вьюху.
+       Ctrl+F перехватывает ProcessCmdKey и шлёт "find-open" — модуль
+       поднимается по первому нажатию через window.LiveModules.load. -->
+  <!-- Пермиссии сайтов (гео/камера/микрофон): аккуратный диалог вместо
+       системного попапа (host PermissionRequested → perm-answer).
+       Приходит только вместе с сообщением "perm". -->
+  <!-- «Восстановить вкладки?» после аварийного завершения
+       (host session-restore → session-answer). -->
+  <!-- Каталог ленивых модулей (window.LiveModules): load/prefetch/ready.
+       Ниже по файлу из него грузятся menu/findbar/perm/restore/welcome. -->
+  <script src="modules.js"></script>
+  <!-- Контракт времени интро (Timeline/Stage/Ease): общий с композицией
+       HyperFrames, грузится сразу, потому что первый кадр строит он. -->
+  <script src="intro-clock.js"></script>
+  <script src="turbo.js"></script>
+</body>
+</html>
